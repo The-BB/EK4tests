@@ -1,0 +1,1467 @@
+diff --git a/docs/PORTING b/docs/PORTING
+index d04f3b4..3d9682c 100644
+--- a/docs/PORTING
++++ b/docs/PORTING
+@@ -72,12 +72,7 @@ TODO: nptl / linuxthreads / linuxthreads.old
+ 
+ - enable ldso/shared options in your extra/Configs/Config.ARCH file
+ - you will need to create the following files in ldso/ldso/ARCH/
+-  dl-debug.h  dl-startup.h  dl-syscalls.h  dl-sysdep.h  elfinterp.c  resolve.S
+-
+-- dl-debug.h: define string versions of all the relocations of your arch in the
+-  _dl_reltypes_tab array ... the index should match the actual reloc type, so
+-  if the value of say R_X86_64_PC16 is 13, then "R_X86_64_PC16" better be at
+-  index 13 of the array
++  dl-startup.h  dl-syscalls.h  dl-sysdep.h  elfinterp.c  resolve.S
+ 
+ - dl-startup.h:
+   - define the _start function which should call _dl_start which takes just one
+diff --git a/ldso/ldso/arc/dl-debug.h b/ldso/ldso/arc/dl-debug.h
+deleted file mode 100644
+index 6573e54..0000000
+--- a/ldso/ldso/arc/dl-debug.h
++++ /dev/null
+@@ -1,83 +0,0 @@
+-/*
+- * Copyright (C) 2013 Synopsys, Inc. (www.synopsys.com)
+- *
+- * Licensed under the LGPL v2.1 or later, see the file COPYING.LIB in this tarball.
+- */
+-static const char *_dl_reltypes_tab[] =
+-{
+-	"R_ARC_NONE",		/* 0 */
+-	"R_ARC_8",
+-	"R_ARC_16",
+-	"R_ARC_24",
+-	"R_ARC_32",
+-	"R_ARC_B26",		/* 5 */
+-	"R_ARC_B22_PCREL",
+-	"R_ARC_H30",
+-	"R_ARC_N8",
+-	"R_ARC_N16",
+-	"R_ARC_N24",		/* 10 */
+-	"R_ARC_N32",
+-	"R_ARC_SDA",
+-	"R_ARC_SECTOFF",
+-	"R_ARC_S21H_PCREL",
+-	"R_ARC_S21W_PCREL",	/* 15 */
+-	"R_ARC_S25H_PCREL",
+-	"R_ARC_S25W_PCREL",
+-	"R_ARC_SDA32",
+-	"R_ARC_SDA_LDST",
+-	"R_ARC_SDA_LDST1",	/* 20 */
+-	"R_ARC_SDA_LDST2",
+-	"R_ARC_SDA16_LD",
+-	"R_ARC_SDA16_LD1",
+-	"R_ARC_SDA16_LD2",
+-	"R_ARC_S13_PCREL",	/* 25 */
+-	"R_ARC_W",
+-	"R_ARC_32_ME",
+-	"R_ARC_N32_ME",
+-	"R_ARC_SECTOFF_ME",
+-	"R_ARC_SDA32_ME",	/* 30 */
+-	"R_ARC_W_ME",
+-	"R_ARC_H30_ME",
+-	"R_ARC_SECTOFF_U8",
+-	"R_ARC_SECTOFF_S9",
+-	"R_AC_SECTOFF_U8",	/* 35 */
+-	"R_AC_SECTOFF_U8_1",
+-	"R_AC_SECTOFF_U8_2",
+-	"R_AC_SECTOFF_S9",
+-	"R_AC_SECTOFF_S9_1",
+-	"R_AC_SECTOFF_S9_2",	/* 40 */
+-	"R_ARC_SECTOFF_ME_1",
+-	"R_ARC_SECTOFF_ME_2",
+-	"R_ARC_SECTOFF_1",
+-	"R_ARC_SECTOFF_2",
+-	"",			/* 45 */
+-	"",
+-	"",
+-	"",
+-	"",
+-	"R_ARC_PC32",		/* 50 */
+-	"R_ARC_GOTPC32",
+-	"R_ARC_PLT32",
+-	"R_ARC_COPY",
+-	"R_ARC_GLOB_DAT",
+-	"R_ARC_JMP_SLOT",	/* 55 */
+-	"R_ARC_RELATIVE",
+-	"R_ARC_GOTOFF",
+-	"R_ARC_GOTPC",
+-	"R_ARC_GOT32",
+-	"",                     /* 60 */
+-	"",
+-	"",
+-	"",
+-	"",
+-	"",                     /* 65 */
+-        "R_ARC_TLS_DTPMOD",
+-        "R_ARC_TLS_DTPOFF",
+-        "R_ARC_TLS_TPOFF",
+-        "R_ARC_TLS_GD_GOT",
+-        "R_ARC_TLS_GD_LD",      /* 70 */
+-        "R_ARC_TLS_GD_CALL",
+-        "R_ARC_TLS_IE_GOT",
+-        "",
+-        "",
+-};
+diff --git a/ldso/ldso/arc/elfinterp.c b/ldso/ldso/arc/elfinterp.c
+index 2f0cf7f..1b5b651 100644
+--- a/ldso/ldso/arc/elfinterp.c
++++ b/ldso/ldso/arc/elfinterp.c
+@@ -262,13 +262,8 @@ static int _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 	if (unlikely(res != 0)) {
+ 		if (res < 0) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-#if defined __SUPPORT_LD_DEBUG__
+-			_dl_dprintf(2, "can't handle reloc type %s\n ",
+-				    _dl_reltypes(reloc_type));
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x\n",
+ 				    reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/arm/dl-debug.h b/ldso/ldso/arm/dl-debug.h
+deleted file mode 100644
+index af14eca..0000000
+--- a/ldso/ldso/arm/dl-debug.h
++++ /dev/null
+@@ -1,46 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* ARM ELF shared library loader suppport
+- *
+- * Copyright (C) 2001-2004 Erik Andersen
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] =
+-{
+-  [0]	"R_ARM_NONE",	    "R_ARM_PC24",	"R_ARM_ABS32",		"R_ARM_REL32",
+-  [4]	"R_ARM_PC13",	    "R_ARM_ABS16",	"R_ARM_ABS12",		"R_ARM_THM_ABS5",
+-  [8]	"R_ARM_ABS8",		"R_ARM_SBREL32","R_ARM_THM_PC22",	"R_ARM_THM_PC8",
+-  [12]	"R_ARM_AMP_VCALL9",	"R_ARM_SWI24",	"R_ARM_THM_SWI8",	"R_ARM_XPC25",
+-  [16]	"R_ARM_THM_XPC22",  "R_ARM_TLS_DTPMOD32",   "R_ARM_TLS_DTPOFF32",   "R_ARM_TLS_TPOFF32",
+-  [20]	"R_ARM_COPY",		"R_ARM_GLOB_DAT","R_ARM_JUMP_SLOT",	"R_ARM_RELATIVE",
+-  [24]	"R_ARM_GOTOFF",		"R_ARM_GOTPC",	 "R_ARM_GOT32",		"R_ARM_PLT32",
+-  [32]	"R_ARM_ALU_PCREL_7_0","R_ARM_ALU_PCREL_15_8","R_ARM_ALU_PCREL_23_15","R_ARM_LDR_SBREL_11_0",
+-  [36]	"R_ARM_ALU_SBREL_19_12","R_ARM_ALU_SBREL_27_20",
+-  [100]	"R_ARM_GNU_VTENTRY","R_ARM_GNU_VTINHERIT","R_ARM_THM_PC11","R_ARM_THM_PC9",
+-  [104] "R_ARM_TLS_GD32","R_ARM_TLS_LDM32","R_ARM_TLS_LDO32","R_ARM_TLS_IE32",
+-  [108] "R_ARM_TLS_LE32","R_ARM_TLS_LDO12","R_ARM_TLS_LE12","R_ARM_TLS_IE12GP",
+-  [249] "R_ARM_RXPC25", "R_ARM_RSBREL32", "R_ARM_THM_RPC22", "R_ARM_RREL32",
+-  [253] "R_ARM_RABS22", "R_ARM_RPC24", "R_ARM_RBASE",
+-};
+diff --git a/ldso/ldso/arm/elfinterp.c b/ldso/ldso/arm/elfinterp.c
+index 2043263..11866a4 100644
+--- a/ldso/ldso/arm/elfinterp.c
++++ b/ldso/ldso/arm/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* ARM ELF shared library loader suppport
+  *
+  * Copyright (C) 2001-2004 Erik Andersen
+@@ -138,11 +137,7 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 		if (unlikely(res <0))
+ 		{
+ 		        int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type %s\n ", _dl_reltypes(reloc_type));
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		}
+ 		if (unlikely(res >0))
+diff --git a/ldso/ldso/avr32/dl-debug.h b/ldso/ldso/avr32/dl-debug.h
+deleted file mode 100644
+index 44b0c01..0000000
+--- a/ldso/ldso/avr32/dl-debug.h
++++ /dev/null
+@@ -1,45 +0,0 @@
+-/*
+- * AVR32 ELF shared libary loader support
+- *
+- * Copyright (C) 2005-2007 Atmel Corporation
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] = {
+-    "R_AVR32_NONE",
+-    "R_AVR32_32", "R_AVR32_16", "R_AVR32_8",
+-    "R_AVR32_32_PCREL", "R_AVR32_16_PCREL", "R_AVR32_8_PCREL",
+-    "R_AVR32_DIFF32", "R_AVR32_DIFF16", "R_AVR32_DIFF8",
+-    "R_AVR32_GOT32", "R_AVR32_GOT16", "R_AVR32_GOT8",
+-    "R_AVR32_21S", "R_AVR32_16U", "R_AVR32_16S", "R_AVR32_8S", "R_AVR32_8S_EXT",
+-    "R_AVR32_22H_PCREL", "R_AVR32_18W_PCREL", "R_AVR32_16B_PCREL",
+-    "R_AVR32_16N_PCREL", "R_AVR32_14UW_PCREL", "R_AVR32_11H_PCREL",
+-    "R_AVR32_10UW_PCREL", "R_AVR32_9H_PCREL", "R_AVR32_9UW_PCREL",
+-    "R_AVR32_HI16", "R_AVR32_LO16",
+-    "R_AVR32_GOTPC", "R_AVR32_GOTCALL", "R_AVR32_LDA_GOT",
+-    "R_AVR32_GOT21S", "R_AVR32_GOT18SW", "R_AVR32_GOT16S", "R_AVR32_GOT7UW",
+-    "R_AVR32_32_CPENT", "R_AVR32_CPCALL", "R_AVR32_16_CP", "R_AVR32_9W_CP",
+-    "R_AVR32_RELATIVE", "R_AVR32_GLOB_DAT", "R_AVR32_JMP_SLOT",
+-    "R_AVR32_ALIGN",
+-};
+diff --git a/ldso/ldso/avr32/elfinterp.c b/ldso/ldso/avr32/elfinterp.c
+index 17f34fa..9bae4d9 100644
+--- a/ldso/ldso/avr32/elfinterp.c
++++ b/ldso/ldso/avr32/elfinterp.c
+@@ -99,13 +99,8 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (res < 0) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-#if defined(__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type %s\n",
+-				    _dl_reltypes(reloc_type));
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x\n",
+ 				    reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/bfin/dl-debug.h b/ldso/ldso/bfin/dl-debug.h
+deleted file mode 100644
+index 6952b61..0000000
+--- a/ldso/ldso/bfin/dl-debug.h
++++ /dev/null
+@@ -1,54 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* Blackfin ELF shared library loader suppport
+- *
+- * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+- *                              David Engel, Hongjiu Lu and Mitch D'Souza
+- * Copyright (C) 2001-2004 Erik Andersen
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] =
+-{
+-  [0]	"R_BFIN_UNUSED0",	"R_BFIN_PCREL5M2",
+-  [2]	"R_BFIN_UNUSED1",	"R_BFIN_PCREL10",
+-  [4]	"R_BFIN_PCREL12_JUMP",	"R_BFIN_RIMM16",
+-  [6]	"R_BFIN_LUIMM16",	"R_BFIN_HUIMM16",
+-  [8]	"R_BFIN_PCREL12_JUMP_S","R_BFIN_PCREL24_JUMP_X",
+-  [10]	"R_BFIN_PCREL24",	"R_BFIN_UNUSEDB",
+-  [12]	"R_BFIN_UNUSEDC",	"R_BFIN_PCREL24_JUMP_L",
+-  [14]	"R_BFIN_PCREL24_CALL_X","R_BFIN_var_eq_symb",
+-  [16]	"R_BFIN_BYTE_DATA",	"R_BFIN_BYTE2_DATA",	"R_BFIN_BYTE4_DATA",
+-  [19]	"R_BFIN_PCREL11",
+-
+-  [20]	"R_BFIN_GOT17M4",	"R_BFIN_GOTHI",		"R_BFIN_GOTLO",
+-  [23]	"R_BFIN_FUNCDESC",
+-  [24]	"R_BFIN_FUNCDESC_GOT17M4",	"R_BFIN_FUNCDESC_GOTHI",	"R_BFIN_FUNCDESC_GOTLO",
+-  [27]	"R_BFIN_FUNCDESC_VALUE", "R_BFIN_FUNCDESC_GOTOFF17M4",
+-  [29]	"R_BFIN_FUNCDESC_GOTOFFHI", "R_BFIN_FUNCDESC_GOTOFFLO",
+-  [31]	"R_BFIN_GOTOFF17M4",	"R_BFIN_GOTOFFHI",	"R_BFIN_GOTOFFLO",
+-#if 0
+-  [200]	"R_BFIN_GNU_VTINHERIT",	"R_BFIN_GNU_VTENTRY"
+-#endif
+-};
+diff --git a/ldso/ldso/bfin/elfinterp.c b/ldso/ldso/bfin/elfinterp.c
+index 4e1c1c7..d4cb0f1 100644
+--- a/ldso/ldso/bfin/elfinterp.c
++++ b/ldso/ldso/bfin/elfinterp.c
+@@ -136,11 +136,7 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (res <0) {
+ 		        int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type %s\n ", _dl_reltypes(reloc_type));
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else if (res >0) {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/c6x/dl-debug.h b/ldso/ldso/c6x/dl-debug.h
+deleted file mode 100644
+index d4915bf..0000000
+--- a/ldso/ldso/c6x/dl-debug.h
++++ /dev/null
+@@ -1,49 +0,0 @@
+-/* C6X DSBT ELF shared library loader suppport.
+- *
+- * Copyright (C) 2010 Texas Instruments Incorporated
+- * Contributed by Mark Salter <msalter@redhat.com>
+- *
+- * All rights reserved.
+- *
+- * Licensed under the LGPL v2.1, see the file COPYING.LIB in this tarball.
+- */
+-
+-static const char * const _dl_reltypes_tab[] =
+-{
+-  	"R_C6000_NONE",			/* 0 */
+-	"R_C6000_ABS32",
+-	"R_C6000_ABS16",
+-	"R_C6000_ABS8",
+-	"R_C6000_PCR_S21",
+-	"R_C6000_PCR_S12",		/* 5 */
+-	"R_C6000_PCR_S10",
+-	"R_C6000_PCR_S7",
+-	"R_C6000_ABS_S16",
+-	"R_C6000_ABS_L16",
+-	"R_C6000_ABS_H16",		/* 10 */
+-	"R_C6000_SBR_U15_B",
+-	"R_C6000_SBR_U15_H",
+-	"R_C6000_SBR_U15_W",
+-	"R_C6000_SBR_S16",
+-	"R_C6000_SBR_L16_B",		/* 15 */
+-	"R_C6000_SBR_L16_H",
+-	"R_C6000_SBR_L16_W",
+-	"R_C6000_SBR_H16_B",
+-	"R_C6000_SBR_H16_H",
+-	"R_C6000_SBR_H16_W",		/* 20 */
+-	"R_C6000_SBR_GOT_U15_W",
+-	"R_C6000_SBR_GOT_L16_W",
+-	"R_C6000_SBR_GOT_H16_W",
+-	"R_C6000_DSBT_INDEX",
+-	"R_C6000_PREL31",		/* 25 */
+-	"R_C6000_COPY",
+-	"R_C6000_JUMP_SLOT",
+-	"R_C6000_SBR_GOT32",
+-	"R_C6000_PCR_H16",
+-	"R_C6000_PCR_L16",		/* 30 */
+-#if 0
+-	"R_C6000_ALIGN",		/* 253 */
+-	"R_C6000_FPHEAD",		/* 254 */
+-	"R_C6000_NOCMP",		/* 255 */
+-#endif
+-};
+diff --git a/ldso/ldso/c6x/elfinterp.c b/ldso/ldso/c6x/elfinterp.c
+index f0e05b9..5e265ed 100644
+--- a/ldso/ldso/c6x/elfinterp.c
++++ b/ldso/ldso/c6x/elfinterp.c
+@@ -130,11 +130,7 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (res <0) {
+ 		        int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type %s\n ", _dl_reltypes(reloc_type));
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else if (res >0) {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/cris/dl-debug.h b/ldso/ldso/cris/dl-debug.h
+deleted file mode 100644
+index dcd23ed..0000000
+--- a/ldso/ldso/cris/dl-debug.h
++++ /dev/null
+@@ -1,42 +0,0 @@
+-/*
+- * CRIS ELF shared library loader support.
+- *
+- * Program to load an elf binary on a linux system, and run it.
+- * References to symbols in sharable libraries can be resolved
+- * by either an ELF sharable library or a linux style of shared
+- * library.
+- *
+- * Copyright (C) 2002-2004, Axis Communications AB
+- * All rights reserved
+- *
+- * Author: Tobias Anderberg, <tobiasa@axis.com>
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] = {
+-	[0]  "R_CRIS_NONE", "R_CRIS_8", "R_CRIS_16", "R_CRIS_32",
+-	[4]  "R_CRIS_8_PCREL", "R_CRIS_16_PCREL", "R_CRIS_32_PCREL", "R_CRIS_GNU_VTINHERIT",
+-	[8]  "R_CRIS_GNU_VTENTRY", "R_CRIS_COPY", "R_CRIS_GLOB_DAT", "R_CRIS_JUMP_SLOT",
+-	[16] "R_CRIS_RELATIVE", "R_CRIS_16_GOT", "R_CRIS_32_GOT", "R_CRIS_16_GOTPLT",
+-	[32] "R_CRIS_32_GOTPLT", "R_CRIS_32_GOTREL", "R_CRIS_32_PLT_GOTREL", "R_CRIS_32_PLT_PCREL",
+-};
+diff --git a/ldso/ldso/cris/elfinterp.c b/ldso/ldso/cris/elfinterp.c
+index 5ad3025..5ab2e4f 100644
+--- a/ldso/ldso/cris/elfinterp.c
++++ b/ldso/ldso/cris/elfinterp.c
+@@ -131,14 +131,8 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely(res < 0)) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type %s\n",
+-				    _dl_reltypes(reloc_type));
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x\n",
+ 				    reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else if (unlikely(res > 0)) {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/dl-debug.c b/ldso/ldso/dl-debug.c
+index 88a4893..4767e07 100644
+--- a/ldso/ldso/dl-debug.c
++++ b/ldso/ldso/dl-debug.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* common debug code for ELF shared library loader
+  *
+  * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+@@ -41,22 +40,6 @@
+ 
+ #if defined (__SUPPORT_LD_DEBUG__)
+ 
+-/* include the arch-specific _dl_reltypes_tab */
+-#include "dl-debug.h"
+-
+-static const char *_dl_reltypes(int type)
+-{
+-	static char buf[50];
+-	const char *str;
+-	int tabsize;
+-
+-	tabsize = (int)(sizeof(_dl_reltypes_tab) / sizeof(_dl_reltypes_tab[0]));
+-
+-	if (type >= tabsize || (str = _dl_reltypes_tab[type]) == NULL)
+-		str = _dl_simple_ltoa(buf, (unsigned long)type);
+-
+-	return str;
+-}
+ static void debug_sym(ElfW(Sym) *symtab, char *strtab, int symtab_index)
+ {
+ 	if (!_dl_debug_symbols || !symtab_index)
+@@ -89,8 +72,8 @@ static void debug_reloc(ElfW(Sym) *symtab, char *strtab, ELF_RELOC *rpnt)
+ 		_dl_dprintf(_dl_debug_file, "\n%s\n\t", sym);
+ 	}
+ 
+-	_dl_dprintf(_dl_debug_file, "%s\toffset=%x",
+-		_dl_reltypes(ELF_R_TYPE(rpnt->r_info)),
++	_dl_dprintf(_dl_debug_file, "%x\toffset=%x",
++		ELF_R_TYPE(rpnt->r_info),
+ 		rpnt->r_offset);
+ #ifdef ELF_USES_RELOCA
+ 	_dl_dprintf(_dl_debug_file, "\taddend=%x", rpnt->r_addend);
+diff --git a/ldso/ldso/frv/dl-debug.h b/ldso/ldso/frv/dl-debug.h
+deleted file mode 100644
+index 65c2386..0000000
+--- a/ldso/ldso/frv/dl-debug.h
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/* FR-V FDPIC ELF shared library loader suppport
+- * Copyright (C) 2003, 2004 Red Hat, Inc.
+- * Contributed by Alexandre Oliva <aoliva@redhat.com>
+- * Lots of code copied from ../i386/elfinterp.c, so:
+- * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+- *               David Engel, Hongjiu Lu and Mitch D'Souza
+- * Copyright (C) 2001-2002, Erik Andersen
+- * All rights reserved.
+- *
+- * Licensed under the LGPL v2.1, see the file COPYING.LIB in this tarball.
+- */
+-
+-static const char * const _dl_reltypes_tab[] =
+-{
+-  [0]	"R_FRV_NONE",		"R_FRV_32",
+-  [2]	"R_FRV_LABEL16",	"R_FRV_LABEL24",
+-  [4]	"R_FRV_LO16",		"R_FRV_HI16",
+-  [6]	"R_FRV_GPREL12",	"R_FRV_GPRELU12",
+-  [8]	"R_FRV_GPREL32",	"R_FRV_GPRELHI",	"R_FRV_GPRELLO",
+-  [11]	"R_FRV_GOT12",		"R_FRV_GOTHI",		"R_FRV_GOTLO",
+-  [14]	"R_FRV_FUNCDESC",
+-  [15]	"R_FRV_FUNCDESC_GOT12",	"R_FRV_FUNCDESC_GOTHI",	"R_FRV_FUNCDESC_GOTLO",
+-  [18]	"R_FRV_FUNCDESC_VALUE", "R_FRV_FUNCDESC_GOTOFF12",
+-  [20]	"R_FRV_FUNCDESC_GOTOFFHI", "R_FRV_FUNCDESC_GOTOFFLO",
+-  [22]	"R_FRV_GOTOFF12",	"R_FRV_GOTOFFHI",	"R_FRV_GOTOFFLO",
+-#if 0
+-  [200]	"R_FRV_GNU_VTINHERIT",	"R_FRV_GNU_VTENTRY"
+-#endif
+-};
+diff --git a/ldso/ldso/frv/elfinterp.c b/ldso/ldso/frv/elfinterp.c
+index 2c954b3..96e22a9 100644
+--- a/ldso/ldso/frv/elfinterp.c
++++ b/ldso/ldso/frv/elfinterp.c
+@@ -125,11 +125,7 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 		if (res <0)
+ 		{
+ 		        int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type %s\n ", _dl_reltypes(reloc_type));
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		}
+ 		else if (res >0)
+diff --git a/ldso/ldso/i386/dl-debug.h b/ldso/ldso/i386/dl-debug.h
+deleted file mode 100644
+index 82baf1f..0000000
+--- a/ldso/ldso/i386/dl-debug.h
++++ /dev/null
+@@ -1,36 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* i386 ELF shared library loader suppport
+- *
+- * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+- *                              David Engel, Hongjiu Lu and Mitch D'Souza
+- * Copyright (C) 2001-2004 Erik Andersen
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] = {
+-	[0] "R_386_NONE",     "R_386_32",     "R_386_PC32",     "R_386_GOT32",
+-	[4] "R_386_PLT32",    "R_386_COPY",   "R_386_GLOB_DAT", "R_386_JMP_SLOT",
+-	[8] "R_386_RELATIVE", "R_386_GOTOFF", "R_386_GOTPC",
+-};
+diff --git a/ldso/ldso/i386/elfinterp.c b/ldso/ldso/i386/elfinterp.c
+index aadb00a..b2fb182 100644
+--- a/ldso/ldso/i386/elfinterp.c
++++ b/ldso/ldso/i386/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* i386 ELF shared library loader suppport
+  *
+  * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+@@ -137,14 +136,8 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely(res < 0)) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type '%s' in lib '%s'\n",
+-				    _dl_reltypes(reloc_type), tpnt->libname);
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x in lib '%s'\n",
+ 				    reloc_type, tpnt->libname);
+-#endif
+ 			return res;
+ 		} else if (unlikely(res > 0)) {
+ 			_dl_dprintf(2, "can't resolve symbol in lib '%s'.\n", tpnt->libname);
+diff --git a/ldso/ldso/m68k/dl-debug.h b/ldso/ldso/m68k/dl-debug.h
+deleted file mode 100644
+index 71b513a..0000000
+--- a/ldso/ldso/m68k/dl-debug.h
++++ /dev/null
+@@ -1,42 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* m68k ELF shared library loader suppport
+- *
+- * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+- *                         David Engel, Hongjiu Lu and Mitch D'Souza
+- * Adapted to ELF/68k by Andreas Schwab.
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] = {
+-	 [0] "R_68K_NONE",
+-	 [1] "R_68K_32",     "R_68K_16",       "R_68K_8",
+-	 [4] "R_68K_PC32",   "R_68K_PC16",     "R_68K_PC8",
+-	 [7] "R_68K_GOT32",  "R_68K_GOT16",    "R_68K_GOT8",
+-	[10] "R_68K_GOT32O", "R_68K_GOT16O",   "R_68K_GOT8O",
+-	[13] "R_68K_PLT32",  "R_68K_PLT16",    "R_68K_PLT8",
+-	[16] "R_68K_PLT32O", "R_68K_PLT16O",   "R_68K_PLT8O",
+-	[19] "R_68K_COPY",   "R_68K_GLOB_DAT", "R_68K_JMP_SLOT", "R_68K_RELATIVE",
+-	[23] "R_68K_NUM"
+-};
+diff --git a/ldso/ldso/m68k/elfinterp.c b/ldso/ldso/m68k/elfinterp.c
+index fd7fe85..899fa95 100644
+--- a/ldso/ldso/m68k/elfinterp.c
++++ b/ldso/ldso/m68k/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* m68k ELF shared library loader suppport
+  *
+  * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+@@ -133,13 +132,8 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely(res < 0)) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-
+ 			_dl_dprintf(2, "can't handle reloc type "
+-#if defined (__SUPPORT_LD_DEBUG__)
+-				    "%s\n", _dl_reltypes(reloc_type));
+-#else
+ 				    "%x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else if (unlikely(res > 0)) {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/metag/dl-debug.h b/ldso/ldso/metag/dl-debug.h
+deleted file mode 100644
+index 46c257c..0000000
+--- a/ldso/ldso/metag/dl-debug.h
++++ /dev/null
+@@ -1,33 +0,0 @@
+-/*
+- * Meta ELF shared library loader support.
+- *
+- * Program to load an elf binary on a linux system, and run it.
+- * References to symbols in sharable libraries can be resolved
+- * by either an ELF sharable library or a linux style of shared
+- * library.
+- *
+- * Copyright (C) 2013, Imagination Technologies Ltd.
+- *
+- * Licensed under LGPL v2.1 or later, see the file COPYING.LIB in this tarball.
+- */
+-
+-static const char *_dl_reltypes_tab[] = {
+-	[0]  "R_METAG_HIADDR16", "R_METAG_LOADDR16", "R_METAG_ADDR32",
+-	[3]  "R_METAG_NONE", "R_METAG_RELBRANCH", "R_METAG_GETSETOFF",
+-	[6]  "R_METAG_REG32OP1", "R_METAG_REG32OP2", "R_METAG_REG32OP3",
+-	[9]  "R_METAG_REG16OP1", "R_METAG_REG16OP2", "R_METAG_REG16OP3",
+-	[12] "R_METAG_REG32OP4", "R_METAG_HIOG", "R_METAG_LOOG",
+-	[30] "R_METAG_GNU_VTINHERIT", "R_METAG_GNU_VTENTRY",
+-	[32] "R_METAG_HI16_GOTOFF", "R_METAG_LO16_GOTOFF",
+-	[34] "R_METAG_GETSET_GOTOFF", "R_METAG_GETSET_GOT",
+-	[36] "R_METAG_HI16_GOTPC", "R_METAG_LO16_GOTPC",
+-	[38] "R_METAG_HI16_PLT", "R_METAG_LO16_PLT",
+-	[40] "R_METAG_RELBRANCH_PLT", "R_METAG_GOTOFF",
+-	[42] "R_METAG_PLT", "R_METAG_COPY", "R_METAG_JMP_SLOT",
+-	[45] "R_METAG_RELATIVE", "R_METAG_GLOB_DAT", "R_METAG_TLS_GD",
+-	[48] "R_METAG_TLS_LDM", "R_METAG_TLS_LDO_HI16", "R_METAG_TLS_LDO_LO16",
+-	[51] "R_METAG_TLS_LDO", "R_METAG_TLS_IE", "R_METAG_TLS_IENONPIC",
+-	[54] "R_METAG_TLS_IENONPIC_HI16", "R_METAG_TLS_IENONPIC_LO16",
+-	[56] "R_METAG_TLS_TPOFF", "R_METAG_TLS_DTPMOD", "R_METAG_TLS_DTPOFF",
+-	[59] "R_METAG_TLS_LE", "R_METAG_TLS_LE_HI16", "R_METAG_TLS_LE_LO16"
+-};
+diff --git a/ldso/ldso/metag/elfinterp.c b/ldso/ldso/metag/elfinterp.c
+index e0f9817..ef02e8c 100644
+--- a/ldso/ldso/metag/elfinterp.c
++++ b/ldso/ldso/metag/elfinterp.c
+@@ -135,14 +135,8 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely(res < 0)) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type %s\n",
+-				    _dl_reltypes(reloc_type));
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x\n",
+ 				    reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else if (unlikely(res > 0)) {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/microblaze/dl-debug.h b/ldso/ldso/microblaze/dl-debug.h
+deleted file mode 100644
+index 30b27bb..0000000
+--- a/ldso/ldso/microblaze/dl-debug.h
++++ /dev/null
+@@ -1,62 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* microblaze shared library loader suppport
+- *
+- * Copyright (C) 2011 Ryan Flux
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] =
+-	{
+-		"R_MICROBLAZE_NONE",
+-		"R_MICROBLAZE_32",
+-		"R_MICROBLAZE_32_PCREL",
+-		"R_MICROBLAZE_64_PCREL",
+-		"R_MICROBLAZE_32_PCREL_LO",
+-		"R_MICROBLAZE_64",
+-		"R_MICROBLAZE_32_LO",
+-		"R_MICROBLAZE_SRO32",
+-		"R_MICROBLAZE_SRW32",
+-		"R_MICROBLAZE_64_NONE",
+-		"R_MICROBLAZE_32_SYM_OP_SYM",
+-		"R_MICROBLAZE_GNU_VTINHERIT",
+-		"R_MICROBLAZE_GNU_VTENTRY",
+-		"R_MICROBLAZE_GOTPC_64",
+-		"R_MICROBLAZE_GOT_64",
+-		"R_MICROBLAZE_PLT_64",
+-		"R_MICROBLAZE_REL",
+-		"R_MICROBLAZE_JUMP_SLOT",
+-		"R_MICROBLAZE_GLOB_DAT",
+-		"R_MICROBLAZE_GOTOFF_64",
+-		"R_MICROBLAZE_GOTOFF_32",
+-		"R_MICROBLAZE_COPY",
+-		"R_MICROBLAZE_TLS",
+-		"R_MICROBLAZE_TLSGD",
+-		"R_MICROBLAZE_TLSLD",
+-		"R_MICROBLAZE_TLSDTPMOD32",
+-		"R_MICROBLAZE_TLSDTPREL32",
+-		"R_MICROBLAZE_TLSDTPREL64",
+-		"R_MICROBLAZE_TLSGOTTPREL32",
+-		"R_MICROBLAZE_TLSTPREL32",
+-	};
+diff --git a/ldso/ldso/microblaze/elfinterp.c b/ldso/ldso/microblaze/elfinterp.c
+index 33aef2f..9dd4a9a 100644
+--- a/ldso/ldso/microblaze/elfinterp.c
++++ b/ldso/ldso/microblaze/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* microblaze ELF shared library loader suppport
+  *
+  * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+@@ -133,13 +132,8 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely(res < 0)) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-
+ 			_dl_dprintf(2, "can't handle reloc type "
+-#if defined (__SUPPORT_LD_DEBUG__)
+-				    "%s\n", _dl_reltypes(reloc_type));
+-#else
+ 				    "%x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else if (unlikely(res > 0)) {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/mips/dl-debug.h b/ldso/ldso/mips/dl-debug.h
+deleted file mode 100644
+index e71aaf7..0000000
+--- a/ldso/ldso/mips/dl-debug.h
++++ /dev/null
+@@ -1,54 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* mips/mipsel ELF shared library loader suppport
+- *
+-   Copyright (C) 2002, Steven J. Hill (sjhill@realitydiluted.com)
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] =
+-{
+-	[0]		"R_MIPS_NONE",	"R_MIPS_16",	"R_MIPS_32",
+-	[3]		"R_MIPS_REL32",	"R_MIPS_26",	"R_MIPS_HI16",
+-	[6]		"R_MIPS_LO16",	"R_MIPS_GPREL16",	"R_MIPS_LITERAL",
+-	[9]		"R_MIPS_GOT16",	"R_MIPS_PC16",	"R_MIPS_CALL16",
+-	[12]	"R_MIPS_GPREL32",
+-	[16]	"R_MIPS_SHIFT5",	"R_MIPS_SHIFT6",	"R_MIPS_64",
+-	[19]	"R_MIPS_GOT_DISP",	"R_MIPS_GOT_PAGE",	"R_MIPS_GOT_OFST",
+-	[22]	"R_MIPS_GOT_HI16",	"R_MIPS_GOT_LO16",	"R_MIPS_SUB",
+-	[25]	"R_MIPS_INSERT_A",	"R_MIPS_INSERT_B",	"R_MIPS_DELETE",
+-	[28]	"R_MIPS_HIGHER",	"R_MIPS_HIGHEST",	"R_MIPS_CALL_HI16",
+-	[31]	"R_MIPS_CALL_LO16",	"R_MIPS_SCN_DISP",	"R_MIPS_REL16",
+-	[34]	"R_MIPS_ADD_IMMEDIATE",	"R_MIPS_PJUMP",		"R_MIPS_RELGOT",
+-	[37]	"R_MIPS_JALR",		"R_MIPS_TLS_DTPMOD32",	"R_MIPS_TLS_DTPREL32",
+-	[40]	"R_MIPS_TLS_DTPMOD64",	"R_MIPS_TLS_DTPREL64",	"R_MIPS_TLS_GD",
+-	[43]	"R_MIPS_TLS_LDM",	"R_MIPS_TLS_DTPREL_HI16",
+-	[45]	"R_MIPS_TLS_DTPREL_LO16",
+-	[46]	"R_MIPS_TLS_GOTTPREL",	"R_MIPS_TLS_TPREL32",	"R_MIPS_TLS_TPREL64",
+-	[49]	"R_MIPS_TLS_TPREL_HI16",
+-	[50]	"R_MIPS_TLS_TPREL_LO16",
+-	[51]	"R_MIPS_GLOB_DAT",
+-	[126]	"R_MIPS_COPY",		"R_MIPS_JUMP_SLOT",
+-
+-};
+diff --git a/ldso/ldso/mips/elfinterp.c b/ldso/ldso/mips/elfinterp.c
+index 6310c77..8886db9 100644
+--- a/ldso/ldso/mips/elfinterp.c
++++ b/ldso/ldso/mips/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* mips/mipsel ELF shared library loader suppport
+  *
+    Copyright (C) 2002, Steven J. Hill (sjhill@realitydiluted.com)
+@@ -305,11 +304,7 @@ int _dl_parse_relocation_information(struct dyn_elf *xpnt,
+ 				if (symtab_index)
+ 					_dl_dprintf(2, "symbol '%s': ", symname);
+ 
+-#if defined (__SUPPORT_LD_DEBUG__)
+-				_dl_dprintf(2, "can't handle reloc type '%s' in lib '%s'\n", _dl_reltypes(reloc_type), tpnt->libname);
+-#else
+ 				_dl_dprintf(2, "can't handle reloc type %x in lib '%s'\n", reloc_type, tpnt->libname);
+-#endif
+ 				_dl_exit(1);
+ 			}
+ 		}
+diff --git a/ldso/ldso/nds32/dl-debug.h b/ldso/ldso/nds32/dl-debug.h
+deleted file mode 100644
+index ef4c57d..0000000
+--- a/ldso/ldso/nds32/dl-debug.h
++++ /dev/null
+@@ -1,25 +0,0 @@
+-/*
+- * Copyright (C) 2016 Andes Technology, Inc.
+- * Licensed under the LGPL v2.1, see the file COPYING.LIB in this tarball.
+- */
+-
+-static const char *_dl_reltypes_tab[] =
+-{
+-  [0]  "R_NDS32_NONE",					"R_NDS32_16",					"R_NDS32_32",					"R_NDS32_20",
+-  [4]  "R_NDS32_9_PCREL",				"R_NDS32_15_PCREL",			"R_NDS32_17_PCREL",			"R_NDS32_25_PCREL",
+-  [8]  "R_NDS32_HI20",					"R_NDS32_LO12S3",				"R_NDS32_LO12S2",				"R_NDS32_LO12S1",
+-  [12] "R_NDS32_LO12S0",				"R_NDS32_SDA15S3",			"R_NDS32_SDA15S2",			"R_NDS32_SDA15S1",
+-  [16] "R_NDS32_SDA15S0",				"R_NDS32_GNU_VTINHERIT",	"R_NDS32_GNU_VTENTRY",		"R_NDS32_16_RELA",
+-  [20] "R_NDS32_32_RELA"				"R_NDS32_20_RELA",			"R_NDS32_9_PCREL_RELA",		"R_NDS32_15_PCREL_RELA",
+-  [24] "R_NDS32_17_PCREL_RELA",		"R_NDS32_25_PCREL_RELA",	"R_NDS32_HI20_RELA",			"R_NDS32_LO12S3_RELA",
+-  [28] "R_NDS32_LO12S2_RELA",			"R_NDS32_LO12S1_RELA",		"R_NDS32_LO12S0_RELA",		"R_NDS32_SDA15S3_RELA",
+-  [32] "R_NDS32_SDA15S2_RELA",		"R_NDS32_SDA15S1_RELA",		"R_NDS32_SDA15S0_RELA",		"R_NDS32_RELA_GNU_VTINHERIT",
+-  [36] "R_NDS32_RELA_GNU_VTENTRY",	"R_NDS32_GOT20",				"R_NDS32_25_PLTREL",			"R_NDS32_COPY",
+-  [40] "R_NDS32_GLOB_DAT",				"R_NDS32_JMP_SLOT",			"R_NDS32_RELATIVE",			"R_NDS32_GOTOFF",
+-  [44] "R_NDS32_GOTPC20",				"R_NDS32_GOT_HI20",			"R_NDS32_GOT_LO12",			"R_NDS32_GOTPC_HI20",
+-  [48] "R_NDS32_GOTPC_LO12",			"R_NDS32_GOTOFF_HI20",		"R_NDS32_GOTOFF_LO12",		"R_NDS32_INSN16",
+-  [52] "R_NDS32_LABEL",					"R_NDS32_LONGCALL1",			"R_NDS32_LONGCALL2",			"R_NDS32_LONGCALL3",
+-  [56] "R_NDS32_LONGJUMP1",			"R_NDS32_LONGJUMP2",			"R_NDS32_LONGJUMP3",			"R_NDS32_LOADSTORE",
+-  [60] "R_NDS32_9_FIXED_RELA",		"R_NDS32_15_FIXED_RELA",	"R_NDS32_17_FIXED_RELA",	"R_NDS32_25_FIXED_RELA",
+-  [64] "R_NDS32_PLTREL_HI20",			"R_NDS32_PLTREL_LO12",		"R_NDS32_PLT_GOTREL_HI20",	"R_NDS32_PLT_GOTREL_LO12",
+-};
+diff --git a/ldso/ldso/nds32/elfinterp.c b/ldso/ldso/nds32/elfinterp.c
+index bf5c901..6a091f8 100644
+--- a/ldso/ldso/nds32/elfinterp.c
++++ b/ldso/ldso/nds32/elfinterp.c
+@@ -148,11 +148,7 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 		if (unlikely(res <0))
+ 		{
+ 		        int reloc_type = ELF32_R_TYPE(rpnt->r_info);
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type %s\n ", _dl_reltypes(reloc_type));
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		}
+ 		if (unlikely(res >0))
+diff --git a/ldso/ldso/nios2/dl-debug.h b/ldso/ldso/nios2/dl-debug.h
+deleted file mode 100644
+index 1fb596a..0000000
+--- a/ldso/ldso/nios2/dl-debug.h
++++ /dev/null
+@@ -1,18 +0,0 @@
+-/* nios2 shared library loader suppport */
+-
+-static const char * const _dl_reltypes_tab[] =
+-	{
+-		"R_NIOS2_NONE",
+-		"R_NIOS2_BFD_RELOC_32",
+-		"R_NIOS2_BFD_RELOC_16",
+-		"R_NIOS2_BFD_RELOC_8",
+-		"R_NIOS2_GNU_VTINHERIT",
+-		"R_NIOS2_GNU_VTENTRY",
+-		"R_NIOS2_GOT16",
+-		"R_NIOS2_CALL16",
+-		"R_NIOS2_JUMP_SLOT",
+-		"R_NIOS2_GLOB_DAT",
+-		"R_NIOS2_RELATIVE",
+-		"R_NIOS2_GOTOFF",
+-		"R_NIOS2_COPY",
+-	};
+diff --git a/ldso/ldso/nios2/elfinterp.c b/ldso/ldso/nios2/elfinterp.c
+index bdbaa33..bb742d4 100644
+--- a/ldso/ldso/nios2/elfinterp.c
++++ b/ldso/ldso/nios2/elfinterp.c
+@@ -123,13 +123,8 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely(res < 0)) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-
+ 			_dl_dprintf(2, "can't handle reloc type "
+-#if defined (__SUPPORT_LD_DEBUG__)
+-				    "%s\n", _dl_reltypes(reloc_type));
+-#else
+ 				    "%x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else if (unlikely(res > 0)) {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/or1k/dl-debug.h b/ldso/ldso/or1k/dl-debug.h
+deleted file mode 100644
+index d925577..0000000
+--- a/ldso/ldso/or1k/dl-debug.h
++++ /dev/null
+@@ -1,53 +0,0 @@
+-/* OpenRISC 1000 shared library loader suppport
+- *
+- * Copyright (C) 2012 Stefan Kristansson
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] =
+-	{
+-		"R_OR1K_NONE",
+-		"R_OR1K_32",
+-		"R_OR1K_16",
+-		"R_OR1K_8",
+-		"R_OR1K_LO_16_IN_INSN",
+-		"R_OR1K_HI_16_IN_INSN",
+-		"R_OR1K_INSN_REL_26",
+-		"R_OR1K_GNU_VTENTRY",
+-		"R_OR1K_GNU_VTINHERIT",
+-		"R_OR1K_32_PCREL",
+-		"R_OR1K_16_PCREL",
+-		"R_OR1K_8_PCREL",
+-		"R_OR1K_GOTPC_HI16",
+-		"R_OR1K_GOTPC_LO16",
+-		"R_OR1K_GOT16",
+-		"R_OR1K_PLT26",
+-		"R_OR1K_GOTOFF_HI16",
+-		"R_OR1K_GOTOFF_LO16",
+-		"R_OR1K_COPY",
+-		"R_OR1K_GLOB_DAT",
+-		"R_OR1K_JMP_SLOT",
+-		"R_OR1K_RELATIVE",
+-	};
+diff --git a/ldso/ldso/or1k/elfinterp.c b/ldso/ldso/or1k/elfinterp.c
+index 928e95b..41db368 100644
+--- a/ldso/ldso/or1k/elfinterp.c
++++ b/ldso/ldso/or1k/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* OpenRISC 1000 ELF shared library loader suppport
+  *
+  * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+@@ -134,13 +133,8 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely(res < 0)) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-
+ 			_dl_dprintf(2, "can't handle reloc type "
+-#if defined (__SUPPORT_LD_DEBUG__)
+-				    "%s\n", _dl_reltypes(reloc_type));
+-#else
+ 				    "%x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else if (unlikely(res > 0)) {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/powerpc/dl-debug.h b/ldso/ldso/powerpc/dl-debug.h
+deleted file mode 100644
+index 720536e..0000000
+--- a/ldso/ldso/powerpc/dl-debug.h
++++ /dev/null
+@@ -1,44 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* powerpc shared library loader suppport
+- *
+- * Copyright (C) 2001-2002 David A. Schleef
+- * Copyright (C) 2003-2004 Erik Andersen
+- * Copyright (C) 2004 Joakim Tjernlund
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] =
+-	{ "R_PPC_NONE", "R_PPC_ADDR32", "R_PPC_ADDR24", "R_PPC_ADDR16",
+-	"R_PPC_ADDR16_LO", "R_PPC_ADDR16_HI", "R_PPC_ADDR16_HA",
+-	"R_PPC_ADDR14", "R_PPC_ADDR14_BRTAKEN", "R_PPC_ADDR14_BRNTAKEN",
+-	"R_PPC_REL24", "R_PPC_REL14", "R_PPC_REL14_BRTAKEN",
+-	"R_PPC_REL14_BRNTAKEN", "R_PPC_GOT16", "R_PPC_GOT16_LO",
+-	"R_PPC_GOT16_HI", "R_PPC_GOT16_HA", "R_PPC_PLTREL24",
+-	"R_PPC_COPY", "R_PPC_GLOB_DAT", "R_PPC_JMP_SLOT", "R_PPC_RELATIVE",
+-	"R_PPC_LOCAL24PC", "R_PPC_UADDR32", "R_PPC_UADDR16", "R_PPC_REL32",
+-	"R_PPC_PLT32", "R_PPC_PLTREL32", "R_PPC_PLT16_LO", "R_PPC_PLT16_HI",
+-	"R_PPC_PLT16_HA", "R_PPC_SDAREL16", "R_PPC_SECTOFF",
+-	"R_PPC_SECTOFF_LO", "R_PPC_SECTOFF_HI", "R_PPC_SECTOFF_HA",
+-};
+diff --git a/ldso/ldso/powerpc/elfinterp.c b/ldso/ldso/powerpc/elfinterp.c
+index 81587a6..43c0ce7 100644
+--- a/ldso/ldso/powerpc/elfinterp.c
++++ b/ldso/ldso/powerpc/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* powerpc shared library loader suppport
+  *
+  * Copyright (C) 2001-2002 David A. Schleef
+@@ -317,9 +316,6 @@ _dl_do_reloc (struct elf_resolve *tpnt,struct r_scope_elem *scope,
+ 		goto out_nocode; /* No code modified */
+ 	default:
+ 		_dl_dprintf(2, "%s: can't handle reloc type ", _dl_progname);
+-#if defined (__SUPPORT_LD_DEBUG__)
+-		_dl_dprintf(2, "%s ", _dl_reltypes(reloc_type));
+-#endif
+ 		if (symtab_index)
+ 			_dl_dprintf(2, "'%s'\n", symname);
+ 		return -1;
+@@ -429,11 +425,7 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 		if (unlikely(res <0))
+ 		{
+ 		        int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type '%s' in lib '%s'\n", _dl_reltypes(reloc_type), tpnt->libname);
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x in lib '%s'\n", reloc_type, tpnt->libname);
+-#endif
+ 			return res;
+ 		}
+ 		if (unlikely(res >0))
+diff --git a/ldso/ldso/sh/dl-debug.h b/ldso/ldso/sh/dl-debug.h
+deleted file mode 100644
+index ac442bf..0000000
+--- a/ldso/ldso/sh/dl-debug.h
++++ /dev/null
+@@ -1,43 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* SuperH ELF shared library loader suppport
+- *
+- * Copyright (C) 2002, Stefan Allius <allius@atecom.com> and
+- *                     Eddie C. Dost <ecd@atecom.com>
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] =
+-{
+-  [0]	"R_SH_NONE",	"R_SH_DIR32",	"R_SH_REL32",	"R_SH_DIR8WPN",
+-  [4]	"R_SH_IND12W",	"R_SH_DIR8WPL",	"R_SH_DIR8WPZ",	"R_SH_DIR8BP",
+-  [8]	"R_SH_DIR8W",	"R_SH_DIR8L",
+- [25]	"R_SH_SWITCH16","R_SH_SWITCH32","R_SH_USES",
+- [28]	"R_SH_COUNT",	"R_SH_ALIGN",	"R_SH_CODE",	"R_SH_DATA",
+- [32]	"R_SH_LABEL",	"R_SH_SWITCH8",	"R_SH_GNU_VTINHERIT","R_SH_GNU_VTENTRY",
+-[144]	"R_SH_TLS_GD_32","R_SH_TLS_LD_32", "R_SH_TLS_LDO_32", "R_SH_TLS_IE_32", 
+-[148]	"R_SH_TLS_LE_32","R_SH_TLS_DTPMOD32", "R_SH_TLS_DTPOFF32", "R_SH_TLS_TPOFF32",
+-[160]	"R_SH_GOT32",	"R_SH_PLT32",	"R_SH_COPY",	"R_SH_GLOB_DAT",
+-[164]	"R_SH_JMP_SLOT","R_SH_RELATIVE","R_SH_GOTOFF",	"R_SH_GOTPC",
+-};
+diff --git a/ldso/ldso/sh/elfinterp.c b/ldso/ldso/sh/elfinterp.c
+index e6ff6a3..ffc8fa5 100644
+--- a/ldso/ldso/sh/elfinterp.c
++++ b/ldso/ldso/sh/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* SuperH ELF shared library loader suppport
+  *
+  * Copyright (C) 2002, Stefan Allius <allius@atecom.com> and
+@@ -131,11 +130,7 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely(res < 0)) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf(2, "can't handle reloc type %s\n ", _dl_reltypes(reloc_type));
+-#else
+ 			_dl_dprintf(2, "can't handle reloc type %x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		}
+ 		if (unlikely(res > 0)) {
+diff --git a/ldso/ldso/sparc/dl-debug.h b/ldso/ldso/sparc/dl-debug.h
+deleted file mode 100644
+index 5c62cef..0000000
+--- a/ldso/ldso/sparc/dl-debug.h
++++ /dev/null
+@@ -1,40 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* sparc ELF shared library loader suppport
+- *
+- * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+- *				David Engel, Hongjiu Lu and Mitch D'Souza
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] = {
+-	"R_SPARC_NONE", "R_SPARC_8",
+-	"R_SPARC_16", "R_SPARC_32", "R_SPARC_DISP8", "R_SPARC_DISP16",
+-	"R_SPARC_DISP32", "R_SPARC_WDISP30", "R_SPARC_WDISP22",
+-	"R_SPARC_HI22", "R_SPARC_22", "R_SPARC_13", "R_SPARC_LO10",
+-	"R_SPARC_GOT10", "R_SPARC_GOT13", "R_SPARC_GOT22", "R_SPARC_PC10",
+-	"R_SPARC_PC22", "R_SPARC_WPLT30", "R_SPARC_COPY",
+-	"R_SPARC_GLOB_DAT", "R_SPARC_JMP_SLOT", "R_SPARC_RELATIVE",
+-	"R_SPARC_UA32"
+-};
+diff --git a/ldso/ldso/sparc/elfinterp.c b/ldso/ldso/sparc/elfinterp.c
+index bb61be9..bc86a9c 100644
+--- a/ldso/ldso/sparc/elfinterp.c
++++ b/ldso/ldso/sparc/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* sparc ELF shared library loader suppport
+  *
+  * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+@@ -146,13 +145,8 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely(res < 0)) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-
+ 			_dl_dprintf(2, "can't handle reloc type "
+-#if defined (__SUPPORT_LD_DEBUG__)
+-				    "%s\n", _dl_reltypes(reloc_type));
+-#else
+ 				    "%x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else if (unlikely(res > 0)) {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/x86_64/dl-debug.h b/ldso/ldso/x86_64/dl-debug.h
+deleted file mode 100644
+index c47062b..0000000
+--- a/ldso/ldso/x86_64/dl-debug.h
++++ /dev/null
+@@ -1,39 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* x86_64 debug code for ELF shared library loader suppport
+- *
+- * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+- *                              David Engel, Hongjiu Lu and Mitch D'Souza
+- * Copyright (C) 2001-2004 Erik Andersen
+- *
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- * 2. The name of the above contributors may not be
+- *    used to endorse or promote products derived from this software
+- *    without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED.  IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- */
+-
+-static const char * const _dl_reltypes_tab[] = {
+-	[ 0] "R_X86_64_NONE",     "R_X86_64_64",       "R_X86_64_PC32",     "R_X86_64_GOT32",
+-	[ 4] "R_X86_64_PLT32",    "R_X86_64_COPY",     "R_X86_64_GLOB_DAT", "R_X86_64_JUMP_SLOT",
+-	[ 8] "R_X86_64_RELATIVE", "R_X86_64_GOTPCREL", "R_X86_64_32",       "R_X86_64_32S",
+-	[12] "R_X86_64_16",       "R_X86_64_PC16",     "R_X86_64_8",        "R_X86_64_PC8",
+-	[16] "R_X86_64_DTPMOD64", "R_X86_64_DTPOFF64", "R_X86_64_TPOFF64",  "R_X86_64_TLSGD",
+-	[20] "R_X86_64_TLSLD",    "R_X86_64_DTPOFF32", "R_X86_64_GOTTPOFF", "R_X86_64_TPOFF32"
+-};
+diff --git a/ldso/ldso/x86_64/elfinterp.c b/ldso/ldso/x86_64/elfinterp.c
+index 75666a7..2dd7c13 100644
+--- a/ldso/ldso/x86_64/elfinterp.c
++++ b/ldso/ldso/x86_64/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* x86_64 ELF shared library loader suppport
+  *
+  * Copyright (c) 1994-2000 Eric Youngdale, Peter MacDonald,
+@@ -133,13 +132,8 @@ _dl_parse(struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely(res < 0)) {
+ 			int reloc_type = ELF_R_TYPE(rpnt->r_info);
+-
+ 			_dl_dprintf(2, "can't handle reloc type "
+-#if defined (__SUPPORT_LD_DEBUG__)
+-				    "%s\n", _dl_reltypes(reloc_type));
+-#else
+ 				    "%x\n", reloc_type);
+-#endif
+ 			_dl_exit(-res);
+ 		} else if (unlikely(res > 0)) {
+ 			_dl_dprintf(2, "can't resolve symbol\n");
+diff --git a/ldso/ldso/xtensa/dl-debug.h b/ldso/ldso/xtensa/dl-debug.h
+deleted file mode 100644
+index 18beae5..0000000
+--- a/ldso/ldso/xtensa/dl-debug.h
++++ /dev/null
+@@ -1,38 +0,0 @@
+-/* vi: set sw=4 ts=4: */
+-/* Xtensa ELF shared library loader suppport
+- *
+- * Copyright (C) 2007 Tensilica Inc.
+- *
+- * Licensed under the LGPL v2.1, see the file COPYING.LIB in this tarball.
+- */
+-
+-static const char * const _dl_reltypes_tab[] =
+-{
+-	 [0] "R_XTENSA_NONE",			"R_XTENSA_32",
+-	 [2] "R_XTENSA_RTLD",			"R_XTENSA_GLOB_DAT",
+-	 [4] "R_XTENSA_JMP_SLOT",		"R_XTENSA_RELATIVE",
+-	 [6] "R_XTENSA_PLT",			"R_XTENSA_UNUSED7",
+-	 [8] "R_XTENSA_OP0",			"R_XTENSA_OP1",
+-	[10] "R_XTENSA_OP2",			"R_XTENSA_ASM_EXPAND",
+-	[12] "R_XTENSA_ASM_SIMPLIFY",	"R_XTENSA_UNUSED13",
+-	[14] "R_XTENSA_UNUSED14",		"R_XTENSA_GNU_VTINHERIT",
+-	[16] "R_XTENSA_GNU_VTENTRY",	"R_XTENSA_DIFF8",
+-	[18] "R_XTENSA_DIFF16",			"R_XTENSA_DIFF32",
+-	[20] "R_XTENSA_SLOT0_OP",		"R_XTENSA_SLOT1_OP",
+-	[22] "R_XTENSA_SLOT2_OP",		"R_XTENSA_SLOT3_OP",
+-	[24] "R_XTENSA_SLOT4_OP",		"R_XTENSA_SLOT5_OP",
+-	[26] "R_XTENSA_SLOT6_OP",		"R_XTENSA_SLOT7_OP",
+-	[28] "R_XTENSA_SLOT8_OP",		"R_XTENSA_SLOT9_OP",
+-	[30] "R_XTENSA_SLOT10_OP",		"R_XTENSA_SLOT11_OP",
+-	[32] "R_XTENSA_SLOT12_OP",		"R_XTENSA_SLOT13_OP",
+-	[34] "R_XTENSA_SLOT14_OP",		"R_XTENSA_SLOT0_ALT",
+-	[36] "R_XTENSA_SLOT1_ALT",		"R_XTENSA_SLOT2_ALT",
+-	[38] "R_XTENSA_SLOT3_ALT",		"R_XTENSA_SLOT4_ALT",
+-	[40] "R_XTENSA_SLOT5_ALT",		"R_XTENSA_SLOT6_ALT",
+-	[42] "R_XTENSA_SLOT7_ALT",		"R_XTENSA_SLOT8_ALT",
+-	[44] "R_XTENSA_SLOT9_ALT",		"R_XTENSA_SLOT10_ALT",
+-	[46] "R_XTENSA_SLOT11_ALT",		"R_XTENSA_SLOT12_ALT",
+-	[48] "R_XTENSA_SLOT13_ALT",		"R_XTENSA_SLOT14_ALT",
+-	[50] "R_XTENSA_TLSDESC_FN",		"R_XTENSA_TLSDESC_ARG",
+-	[52] "R_XTENSA_TLS_TPOFF"
+-};
+diff --git a/ldso/ldso/xtensa/elfinterp.c b/ldso/ldso/xtensa/elfinterp.c
+index 66deb63..4c83ab6 100644
+--- a/ldso/ldso/xtensa/elfinterp.c
++++ b/ldso/ldso/xtensa/elfinterp.c
+@@ -1,4 +1,3 @@
+-/* vi: set sw=4 ts=4: */
+ /* Xtensa ELF shared library loader suppport
+  *
+  * Copyright (C) 2007 Tensilica Inc.
+@@ -126,12 +125,7 @@ _dl_parse (struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 
+ 		if (unlikely (res < 0)) {
+ 			int reloc_type = ELF_R_TYPE (rpnt->r_info);
+-#if defined (__SUPPORT_LD_DEBUG__)
+-			_dl_dprintf (2, "can't handle reloc type %s\n",
+-						 _dl_reltypes (reloc_type));
+-#else
+ 			_dl_dprintf (2, "can't handle reloc type %x\n", reloc_type);
+-#endif
+ 			_dl_exit (-res);
+ 		}
+ 		if (unlikely (res > 0)) {

@@ -1,0 +1,22 @@
+choice
+	prompt "uClibc version"
+	depends on TOOLCHAINOPTS && USE_UCLIBC
+	help
+	  Select the version of uClibc you wish to use.
+
+	config UCLIBC_USE_VERSION_1_0_21
+		bool "uClibc-ng 1.0.21"
+		select UCLIBC_VERSION_1_0_21
+
+	config UCLIBC_USE_VERSION_1_0_22
+		bool "uClibc-ng 1.0.22"
+		select UCLIBC_VERSION_1_0_22
+
+endchoice
+
+# Debug version.
+
+config UCLIBC_ENABLE_DEBUG
+	bool "Build with debug information"
+	depends on TOOLCHAINOPTS && USE_UCLIBC
+	default n

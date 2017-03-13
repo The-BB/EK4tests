@@ -1,0 +1,17 @@
+--- a/libc/stdlib/posix_memalign.c
++++ b/libc/stdlib/posix_memalign.c
+@@ -34,8 +34,10 @@
+ 	     || alignment == 0
+ 	     */
+ 		return EINVAL;
+-
+-	*memptr = memalign(alignment, size);
+-
+-	return (*memptr != NULL ? 0 : ENOMEM);
++	void *mem = memalign(alignment, size);
++	if (mem != NULL) {
++		*memptr = mem;
++		return 0;
++	} else
++		return ENOMEM;
+ }

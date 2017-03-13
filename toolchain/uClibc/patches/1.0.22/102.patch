@@ -1,0 +1,10 @@
+--- a/libpthread/nptl/sysdeps/arm/pt-arm-unwind-resume.c
++++ /dev/null
+@@ -1,2 +0,0 @@
+-__asm__ (".set __libgcc_s_init, pthread_cancel_init");
+-#include <arm-unwind-resume.c>
+
+--- a/libpthread/nptl/sysdeps/arm/rt-arm-unwind-resume.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <arm-unwind-resume.c>

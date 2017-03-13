@@ -1,0 +1,39 @@
+--- a/include/linux/socket.h
++++ b/include/linux/socket.h
+@@ -16,7 +16,7 @@
+ 				/* _SS_MAXSIZE value minus size of ss_family */
+ } __attribute__ ((aligned(_K_SS_ALIGNSIZE)));	/* force desired alignment */
+ 
+-#if defined(__KERNEL__) || !defined(__GLIBC__) || (__GLIBC__ < 2)
++#ifdef __KERNEL__
+ 
+ #include <asm/socket.h>			/* arch-dependent defines	*/
+ #include <linux/sockios.h>		/* the SIOCxxx I/O controls	*/
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -69,14 +69,9 @@
+ 
+ /***************************** INCLUDES *****************************/
+ 
+-/* This header is used in user-space, therefore need to be sanitised
+- * for that purpose. Those includes are usually not compatible with glibc.
+- * To know which includes to use in user-space, check iwlib.h. */
+-#ifdef __KERNEL__
+ #include <linux/types.h>		/* for "caddr_t" et al		*/
+ #include <linux/socket.h>		/* for "struct sockaddr" et al	*/
+ #include <linux/if.h>			/* for IFNAMSIZ and co... */
+-#endif	/* __KERNEL__ */
+ 
+ /***************************** VERSION *****************************/
+ /*
+--- a/include/asm-mips/types.h
++++ b/include/asm-mips/types.h
+@@ -34,7 +34,7 @@
+ 
+ #else
+ 
+-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
++#if defined(__GNUC__)
+ typedef __signed__ long long __s64;
+ typedef unsigned long long __u64;
+ #endif
