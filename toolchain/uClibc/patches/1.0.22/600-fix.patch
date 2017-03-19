@@ -1,0 +1,25 @@
+--- a/extra/locale/programs/locale.c
++++ b/extra/locale/programs/locale.c
+@@ -236,18 +236,18 @@
+ 		loc = strncpy(loc, GET_LOCALE_NAME(idx), 5);
+ 
+ 		if (loc[2] == '_') {
+-			sprintf(loc, "%5.5s%c%s\0", loc, (dotcs != 0) ? '.' : ' ',
++			sprintf(loc, "%5.5s%c%s%c", loc, (dotcs != 0) ? '.' : ' ',
+ 					(cs == 1) ? ascii
+ 							: ((cs == 2) ?
+ 										utf8
+-: GET_CODESET_NAME(cs)));
++: GET_CODESET_NAME(cs)), '\0');
+ 		} else {
+ 			at = loc[2];
+ 			loc[2] = '_';
+-			sprintf(loc, "%5.5s%c%s@%s\0", loc, (dotcs != 0) ? '.' : ' ',
++			sprintf(loc, "%5.5s%c%s@%s%c", loc, (dotcs != 0) ? '.' : ' ',
+ 					(cs ==
+ 					 1) ? ascii : ((cs == 2) ? utf8 : GET_CODESET_NAME(cs)),
+-					find_at(at));
++					find_at(at), '\0');
+ 		}
+ 	}
+ }
