@@ -3,11 +3,15 @@ config UCLIBC_VERSION
 	depends on USE_UCLIBC
 	default "1.0.21" if UCLIBC_VERSION_1_0_21
 	default "1.0.22" if UCLIBC_VERSION_1_0_22
+	default "1.0.23" if UCLIBC_VERSION_1_0_23
 
 config UCLIBC_VERSION_1_0_21
 	bool
 
 config UCLIBC_VERSION_1_0_22
+	bool
+
+config UCLIBC_VERSION_1_0_23
 	bool
 
 config UCLIBC_VERSION_NG
