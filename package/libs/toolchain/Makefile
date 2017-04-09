@@ -40,6 +40,13 @@ $(call Package/gcc/Default)
   DEPENDS:=@USE_GLIBC
 endef
 
+define Package/gconv-modules
+$(call Package/gcc/Default)
+  TITLE:=Glibc gconv modules
+  VERSION:=$(LIBC_VERSION)-$(PKG_RELEASE)
+  DEPENDS:=@USE_GLIBC
+endef
+
 define Package/locales/config
 	menu "Configuration"
 		depends on EXTERNAL_TOOLCHAIN && PACKAGE_locales
@@ -83,7 +90,7 @@ then
 fi
 if [ -f '/opt/usr/lib/locale/locale-archive' ]
 then
-	echo "You can download locale sources from http://pkg.entware.net/sources/i18n_glib223.tar.gz"
+	echo "You can download locale sources from http://pkg.entware.net/sources/i18n_glib225.tar.gz"
 	echo "You can add new locales to Entware using /opt/bin/localedef.new"
 fi
 if ! [ -f '/opt/usr/lib/locale/locale-archive' ]
@@ -667,6 +674,14 @@ else
 	for file in $(call qstrip,$(CONFIG_LIBPTHREAD_FILE_SPEC)); do \
 		$(INSTALL_DIR) $(1)/opt/lib ; \
 		$(CP) $(call qstrip,$(CONFIG_LIBPTHREAD_ROOT_DIR))/$$$$file $(1)/opt/lib/ ; \
+	done ; \
+	exit 0
+  endef
+
+  define Package/libthread-db/install
+	for file in $(call qstrip,$(CONFIG_LIBTHREAD_DB_FILE_SPEC)); do \
+		$(INSTALL_DIR) $(1)/opt/lib ; \
+		$(CP) $(call qstrip,$(CONFIG_LIBTHREAD_DB_ROOT_DIR))/$$$$file $(1)/opt/lib/ ; \
 	done ; \
 	exit 0
   endef
