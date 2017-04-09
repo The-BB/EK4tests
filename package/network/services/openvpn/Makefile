@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=openvpn
 
 PKG_VERSION:=2.4.0
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 PKG_SOURCE_URL:=http://swupdate.openvpn.net/community/releases
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
@@ -114,22 +114,6 @@ define Package/openvpn-$(BUILD_VARIANT)/install
 		$(1)/opt/etc/init.d
 endef
 
-define Package/openvpn-$(BUILD_VARIANT)/postinst
-#!/bin/sh
-
-PATH=/opt/sbin:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-for bin_with_path in sbin/ifconfig sbin/route sbin/ip bin/netstat; do
-    [ -e "/opt/$$bin_with_path" ] && continue
-    bin=`echo $$bin_with_path | cut -d '/' -f 2`
-    found_bin=`which $$bin`
-    if [ -z "$$found_bin" ]; then
-	echo "Warning: $$bin program not found. Please, install it before using OpenVPN."
-	continue
-    fi
-    ln -s $$found_bin /opt/$$bin_with_path
-done
-endef
 
 $(eval $(call BuildPackage,openvpn-openssl))
 $(eval $(call BuildPackage,openvpn-mbedtls))
