@@ -1,0 +1,11 @@
+--- a/ldso/ldso/ldso.c
++++ b/ldso/ldso/ldso.c
+@@ -259,6 +259,8 @@
+ 	void *p = _dl_malloc(size);
+ 	if (p)
+ 		_dl_memset(p, 0, size);
++	else
++		_dl_exit(1);
+ 	return p;
+ }
+ 
