@@ -1,0 +1,172 @@
+From 7a6bf2d84eb3977974c0ae5bae9abb61aa566b87 Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@uclibc-ng.org>
+Date: Sun, 16 Apr 2017 17:14:36 +0200
+Subject: libm: allow long double wrappers for all architectures
+
+If you enable these wrappers, be sure you don't need long double
+precision on your embedded device, as these only enables
+long double warpper functions to the existing double math
+functions. Required to build some software as lvm2.
+
+Signed-off-by: Waldemar Brodkorb <wbx@uclibc-ng.org>
+---
+ extra/Configs/Config.in.arch             |  1 +
+ libc/sysdeps/linux/arm/bits/mathdef.h    |  6 +-----
+ libc/sysdeps/linux/c6x/bits/mathdef.h    |  4 +---
+ libc/sysdeps/linux/common/bits/mathdef.h |  4 +---
+ libc/sysdeps/linux/mips/bits/mathdef.h   |  6 +-----
+ libc/sysdeps/linux/nios2/bits/mathdef.h  |  6 +-----
+ libc/sysdeps/linux/sh/bits/mathdef.h     |  4 +---
+ libc/sysdeps/linux/sparc/bits/mathdef.h  | 15 ++-------------
+ libc/sysdeps/linux/xtensa/bits/mathdef.h |  4 +---
+ 9 files changed, 10 insertions(+), 40 deletions(-)
+
+diff --git a/extra/Configs/Config.in.arch b/extra/Configs/Config.in.arch
+index baf9559..6ee6c4b 100644
+--- a/extra/Configs/Config.in.arch
++++ b/extra/Configs/Config.in.arch
+@@ -195,6 +195,7 @@ config UCLIBC_HAS_LONG_DOUBLE_MATH
+ 	help
+ 	  If you want the uClibc math library to contain the full set of C99
+ 	  long double math library features, then answer Y.
++	  Danger: These are only wrappers to the double library functions!
+ 
+ config KERNEL_HEADERS
+ 	string "Linux kernel header location"
+diff --git a/libc/sysdeps/linux/arm/bits/mathdef.h b/libc/sysdeps/linux/arm/bits/mathdef.h
+index 478ceed..2b8bdf8 100644
+--- a/libc/sysdeps/linux/arm/bits/mathdef.h
++++ b/libc/sysdeps/linux/arm/bits/mathdef.h
+@@ -34,10 +34,6 @@ typedef double double_t;	/* `double' expressions are evaluated as
+ 
+ #endif	/* ISO C99 */
+ 
+-#ifndef __NO_LONG_DOUBLE_MATH
+-/* Signal that we do not really have a `long double'.  This disables the
+-   declaration of all the `long double' function variants.  */
+-/* XXX The FPA does support this but the patterns in GCC are currently
+-   turned off.  */
++#if !defined __NO_LONG_DOUBLE_MATH && !defined __UCLIBC_HAS_LONG_DOUBLE_MATH__
+ # define __NO_LONG_DOUBLE_MATH	1
+ #endif
+diff --git a/libc/sysdeps/linux/c6x/bits/mathdef.h b/libc/sysdeps/linux/c6x/bits/mathdef.h
+index d8670b8..4d24395 100644
+--- a/libc/sysdeps/linux/c6x/bits/mathdef.h
++++ b/libc/sysdeps/linux/c6x/bits/mathdef.h
+@@ -31,8 +31,6 @@ typedef double double_t;
+ 
+ #endif	/* ISO C99 */
+ 
+-#ifndef __NO_LONG_DOUBLE_MATH
+-/* Signal that we do not really have a `long double'.  This disables the
+-   declaration of all the `long double' function variants.  */
++#if !defined __NO_LONG_DOUBLE_MATH && !defined __UCLIBC_HAS_LONG_DOUBLE_MATH__
+ # define __NO_LONG_DOUBLE_MATH	1
+ #endif
+diff --git a/libc/sysdeps/linux/common/bits/mathdef.h b/libc/sysdeps/linux/common/bits/mathdef.h
+index ddcf6d4..76411e4 100644
+--- a/libc/sysdeps/linux/common/bits/mathdef.h
++++ b/libc/sysdeps/linux/common/bits/mathdef.h
+@@ -35,8 +35,6 @@ typedef double double_t;	/* `double' expressions are evaluated as
+ 
+ #endif	/* ISO C99 */
+ 
+-#ifndef __NO_LONG_DOUBLE_MATH
+-/* Signal that we do not really have a `long double'.  The disables the
+-   declaration of all the `long double' function variants.  */
++#if !defined __NO_LONG_DOUBLE_MATH && !defined __UCLIBC_HAS_LONG_DOUBLE_MATH__
+ # define __NO_LONG_DOUBLE_MATH	1
+ #endif
+diff --git a/libc/sysdeps/linux/mips/bits/mathdef.h b/libc/sysdeps/linux/mips/bits/mathdef.h
+index 6afe20d..09e2ca6 100644
+--- a/libc/sysdeps/linux/mips/bits/mathdef.h
++++ b/libc/sysdeps/linux/mips/bits/mathdef.h
+@@ -37,10 +37,6 @@ typedef double double_t;	/* `double' expressions are evaluated as
+ 
+ #endif	/* ISO C99 */
+ 
+-#if ! defined __NO_LONG_DOUBLE_MATH && _MIPS_SIM == _ABIO32
+-/* Signal that we do not really have a `long double'.  This disables the
+-   declaration of all the `long double' function variants.  */
+-# define __NO_LONG_DOUBLE_MATH	1
+-#elif !defined __NO_LONG_DOUBLE_MATH && !defined __UCLIBC_HAS_LONG_DOUBLE_MATH__
++#if !defined __NO_LONG_DOUBLE_MATH && !defined __UCLIBC_HAS_LONG_DOUBLE_MATH__
+ # define __NO_LONG_DOUBLE_MATH	1
+ #endif
+diff --git a/libc/sysdeps/linux/nios2/bits/mathdef.h b/libc/sysdeps/linux/nios2/bits/mathdef.h
+index 478ceed..2b8bdf8 100644
+--- a/libc/sysdeps/linux/nios2/bits/mathdef.h
++++ b/libc/sysdeps/linux/nios2/bits/mathdef.h
+@@ -34,10 +34,6 @@ typedef double double_t;	/* `double' expressions are evaluated as
+ 
+ #endif	/* ISO C99 */
+ 
+-#ifndef __NO_LONG_DOUBLE_MATH
+-/* Signal that we do not really have a `long double'.  This disables the
+-   declaration of all the `long double' function variants.  */
+-/* XXX The FPA does support this but the patterns in GCC are currently
+-   turned off.  */
++#if !defined __NO_LONG_DOUBLE_MATH && !defined __UCLIBC_HAS_LONG_DOUBLE_MATH__
+ # define __NO_LONG_DOUBLE_MATH	1
+ #endif
+diff --git a/libc/sysdeps/linux/sh/bits/mathdef.h b/libc/sysdeps/linux/sh/bits/mathdef.h
+index 9c7e056..e01906d 100644
+--- a/libc/sysdeps/linux/sh/bits/mathdef.h
++++ b/libc/sysdeps/linux/sh/bits/mathdef.h
+@@ -41,8 +41,6 @@ typedef double double_t;	/* `double' expressions are evaluated as
+ 
+ #endif	/* ISO C99 */
+ 
+-#ifndef __NO_LONG_DOUBLE_MATH
+-/* Signal that we do not really have a `long double'.  The disables the
+-   declaration of all the `long double' function variants.  */
++#if !defined __NO_LONG_DOUBLE_MATH && !defined __UCLIBC_HAS_LONG_DOUBLE_MATH__
+ # define __NO_LONG_DOUBLE_MATH	1
+ #endif
+diff --git a/libc/sysdeps/linux/sparc/bits/mathdef.h b/libc/sysdeps/linux/sparc/bits/mathdef.h
+index 15c0bc7..401e470 100644
+--- a/libc/sysdeps/linux/sparc/bits/mathdef.h
++++ b/libc/sysdeps/linux/sparc/bits/mathdef.h
+@@ -20,8 +20,6 @@
+ # error "Never use <bits/mathdef.h> directly; include <math.h> instead"
+ #endif
+ 
+-#include <bits/wordsize.h>
+-
+ /* FIXME! This file describes properties of the compiler, not the machine;
+    it should not be part of libc!  */
+ 
+@@ -38,15 +36,6 @@ typedef double double_t;
+ 
+ #endif	/* ISO C99 */
+ 
+-#ifndef __NO_LONG_DOUBLE_MATH
+-
+-# if __WORDSIZE == 32
+-/* Signal that in 32bit ABI we do not really have a `long double'.
+-   The disables the declaration of all the `long double' function
+-   variants.  */
+-#  define __NO_LONG_DOUBLE_MATH	1
+-# elif !defined __UCLIBC_HAS_LONG_DOUBLE_MATH__
+-#  define __NO_LONG_DOUBLE_MATH	1
+-# endif
+-
++#if !defined __NO_LONG_DOUBLE_MATH && !defined __UCLIBC_HAS_LONG_DOUBLE_MATH__
++# define __NO_LONG_DOUBLE_MATH	1
+ #endif
+diff --git a/libc/sysdeps/linux/xtensa/bits/mathdef.h b/libc/sysdeps/linux/xtensa/bits/mathdef.h
+index 1c73cb2..687d888 100644
+--- a/libc/sysdeps/linux/xtensa/bits/mathdef.h
++++ b/libc/sysdeps/linux/xtensa/bits/mathdef.h
+@@ -35,8 +35,6 @@ typedef double double_t;	/* `double' expressions are evaluated as
+ 
+ #endif	/* ISO C99 */
+ 
+-#ifndef __NO_LONG_DOUBLE_MATH
+-/* Signal that we do not really have a `long double'.  The disables the
+-   declaration of all the `long double' function variants.  */
++#if !defined __NO_LONG_DOUBLE_MATH && !defined __UCLIBC_HAS_LONG_DOUBLE_MATH__
+ # define __NO_LONG_DOUBLE_MATH	1
+ #endif
+-- 
+cgit v0.11.2-3-g2eb4

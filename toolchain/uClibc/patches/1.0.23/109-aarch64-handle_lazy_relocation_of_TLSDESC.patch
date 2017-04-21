@@ -1,0 +1,36 @@
+From 2f4000a2f56f9b80e431c3ad07b4c8e3711397fc Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@uclibc-ng.org>
+Date: Sun, 16 Apr 2017 17:45:46 +0200
+Subject: aarch64: handle lazy relocation of TLSDESC
+
+Binutils emits by default lazy relocations for TLSDESC and
+ld.so need to handle that. Fixes problems like:
+can't handle reloc type 0x407
+---
+ ldso/ldso/aarch64/elfinterp.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/ldso/ldso/aarch64/elfinterp.c b/ldso/ldso/aarch64/elfinterp.c
+index 879484e..2b5e185 100644
+--- a/ldso/ldso/aarch64/elfinterp.c
++++ b/ldso/ldso/aarch64/elfinterp.c
+@@ -279,6 +279,17 @@ _dl_do_lazy_reloc (struct elf_resolve *tpnt, struct r_scope_elem *scope,
+ 		case R_AARCH64_JUMP_SLOT:
+ 			*reloc_addr += tpnt->loadaddr;
+ 			break;
++#if defined USE_TLS && USE_TLS
++		case R_AARCH64_TLSDESC:
++			{
++				struct tlsdesc volatile *td =
++				  (struct tlsdesc volatile *)reloc_addr;
++
++				td->arg = (void*)rpnt;
++				td->entry = _dl_tlsdesc_return;
++			}
++			break;
++#endif
+ 		default:
+ 			return -1; /*call _dl_exit(1) */
+ 	}
+-- 
+cgit v0.11.2-3-g2eb4

@@ -1,0 +1,78 @@
+From ec81b89935bc76c2b8829c19cbf0b954c5fad008 Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@openadk.org>
+Date: Fri, 14 Apr 2017 07:07:39 +0200
+Subject: or1k: remove unused file
+
+Signed-off-by: Waldemar Brodkorb <wbx@openadk.org>
+---
+ libc/sysdeps/linux/or1k/bits/kernel_stat.h | 59 ------------------------------
+ 1 file changed, 59 deletions(-)
+ delete mode 100644 libc/sysdeps/linux/or1k/bits/kernel_stat.h
+
+diff --git a/libc/sysdeps/linux/or1k/bits/kernel_stat.h b/libc/sysdeps/linux/or1k/bits/kernel_stat.h
+deleted file mode 100644
+index 9c8abf6..0000000
+--- a/libc/sysdeps/linux/or1k/bits/kernel_stat.h
++++ /dev/null
+@@ -1,59 +0,0 @@
+-/* taken from linux/include/asm-or1k/stat.h */
+-
+-#ifndef _BITS_STAT_STRUCT_H
+-#define _BITS_STAT_STRUCT_H
+-
+-#ifndef _LIBC
+-#error bits/kernel_stat.h is for internal uClibc use only!
+-#endif
+-
+-struct kernel_stat {
+-    unsigned long	st_dev;		/* Device.  */
+-    unsigned long	st_ino;		/* File serial number.  */
+-    unsigned int	st_mode;	/* File mode.  */
+-    unsigned int	st_nlink;	/* Link count.  */
+-    unsigned int	st_uid;		/* User ID of the file's owner.  */
+-    unsigned int	st_gid;		/* Group ID of the file's group. */
+-    unsigned long	st_rdev;	/* Device number, if device.  */
+-    unsigned long	__pad1;
+-    long		st_size;	/* Size of file, in bytes.  */
+-    int		        st_blksize;	/* Optimal block size for I/O.  */
+-    int		        __pad2;
+-    long		st_blocks;	/* Number 512-byte blocks allocated. */
+-    struct timespec     st_atim;
+-    struct timespec     st_mtim;
+-    struct timespec     st_ctim;
+-    /*
+-    unsigned long  	st_atime;
+-    unsigned long  	__unused1;
+-    unsigned long  	st_mtime;
+-    unsigned long  	__unused2;
+-    unsigned long  	st_ctime;
+-    unsigned long  	__unused3;
+-    */
+-    unsigned int  	__unused4;
+-    unsigned int  	__unused5;
+-};
+-
+-/* This matches struct stat64 in glibc2.1.
+- */
+-struct kernel_stat64 {
+-    unsigned long long  st_dev;      /* Device.  */
+-    unsigned long long  st_ino;	     /* File serial number.  */
+-    unsigned int        st_mode;     /* File mode.  */
+-    unsigned int        st_nlink;    /* Link count.  */
+-    unsigned int        st_uid;	     /* User ID of the file's owner.  */
+-    unsigned int        st_gid;	     /* Group ID of the file's group. */
+-    unsigned long long  st_rdev;     /* Device number, if device.  */
+-    unsigned long long  __pad1;
+-    long long           st_size;     /* Size of file, in bytes.  */
+-    int                 st_blksize;  /* Optimal block size for I/O.  */
+-    int                 __pad2;
+-    long long           st_blocks;   /* Number 512-byte blocks allocated. */
+-    struct timespec     st_atim;
+-    struct timespec     st_mtim;
+-    struct timespec     st_ctim;
+-    unsigned int        __unused4;
+-    unsigned int        __unused5;
+-};
+-#endif
+-- 
+cgit v0.11.2-3-g2eb4

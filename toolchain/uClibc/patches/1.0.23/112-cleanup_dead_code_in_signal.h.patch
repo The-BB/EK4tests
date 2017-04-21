@@ -1,0 +1,42 @@
+From 3adcd623edf4ea3666e6611ae6d5343d54e15a05 Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@openadk.org>
+Date: Mon, 17 Apr 2017 17:15:15 +0200
+Subject: cleanup dead code in signal.h
+
+---
+ include/signal.h | 17 -----------------
+ 1 file changed, 17 deletions(-)
+
+diff --git a/include/signal.h b/include/signal.h
+index 38baacc..38292a7 100644
+--- a/include/signal.h
++++ b/include/signal.h
+@@ -404,26 +404,9 @@ struct sigvec
+ # define SV_RESETHAND	(1 << 2)/* Reset handler to SIG_DFL on receipt.  */
+ #endif
+ 
+-
+-#if 0
+-/* If VEC is non-NULL, set the handler for SIG to the `sv_handler' member
+-   of VEC.  The signals in `sv_mask' will be blocked while the handler runs.
+-   If the SV_RESETHAND bit is set in `sv_flags', the handler for SIG will be
+-   reset to SIG_DFL before `sv_handler' is entered.  If OVEC is non-NULL,
+-   it is filled in with the old information for SIG.  */
+-extern int sigvec (int __sig, const struct sigvec *__vec,
+-		   struct sigvec *__ovec) __THROW;
+-#endif
+-
+-
+ /* Get machine-dependent `struct sigcontext' and signal subcodes.  */
+ # include <bits/sigcontext.h>
+ 
+-#if 0
+-/* Restore the state saved in SCP.  */
+-extern int sigreturn (struct sigcontext *__scp) __THROW;
+-#endif
+-
+ #endif /*  use BSD.  */
+ 
+ 
+-- 
+cgit v0.11.2-3-g2eb4

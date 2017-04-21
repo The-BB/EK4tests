@@ -1,0 +1,28 @@
+From d18a971e28daf4e83d51d71b2c73fe2ecbeee0cd Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@openadk.org>
+Date: Fri, 14 Apr 2017 07:07:19 +0200
+Subject: or1k: silence gcc warnings
+
+Signed-off-by: Waldemar Brodkorb <wbx@openadk.org>
+---
+ libpthread/linuxthreads/sysdeps/or1k/pt-machine.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/libpthread/linuxthreads/sysdeps/or1k/pt-machine.h b/libpthread/linuxthreads/sysdeps/or1k/pt-machine.h
+index 51521a2..e8d7139 100644
+--- a/libpthread/linuxthreads/sysdeps/or1k/pt-machine.h
++++ b/libpthread/linuxthreads/sysdeps/or1k/pt-machine.h
+@@ -34,10 +34,9 @@ PT_EI long int testandset(int*);
+ PT_EI long int
+ testandset (int *spinlock)
+ {
+-	int err;
+ 	int oldvalue = 1;
+ 
+-	err = INLINE_SYSCALL(or1k_atomic, 3, OR1K_ATOMIC_XCHG, spinlock, &oldvalue);
++	INLINE_SYSCALL(or1k_atomic, 3, OR1K_ATOMIC_XCHG, spinlock, &oldvalue);
+ 
+ 	return (oldvalue);
+ }
+-- 
+cgit v0.11.2-3-g2eb4

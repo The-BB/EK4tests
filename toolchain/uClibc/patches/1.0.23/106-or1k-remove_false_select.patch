@@ -1,0 +1,24 @@
+From e60bad336eeb054f08c262b94c28f383ce6177aa Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@openadk.org>
+Date: Fri, 14 Apr 2017 07:06:55 +0200
+Subject: or1k: remove false select
+
+Signed-off-by: Waldemar Brodkorb <wbx@openadk.org>
+---
+ extra/Configs/Config.or1k | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/extra/Configs/Config.or1k b/extra/Configs/Config.or1k
+index 45e6f0a..bc36dea 100644
+--- a/extra/Configs/Config.or1k
++++ b/extra/Configs/Config.or1k
+@@ -29,7 +29,6 @@ config CONFIG_OR1K
+ 	select ARCH_HAS_MMU	
+ 	select UCLIBC_HAS_FPU
+ 	select ARCH_BIG_ENDIAN
+-        select HAS_NO_THREADS
+ 	bool "or1k"
+ 
+ endchoice
+-- 
+cgit v0.11.2-3-g2eb4
