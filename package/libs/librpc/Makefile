@@ -26,8 +26,8 @@ define Package/librpc
 endef
 
 define Package/librpc/install
-	$(INSTALL_DIR) $(1)/lib/
-	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/lib/librpc.so $(1)/lib/
+	$(INSTALL_DIR) $(1)/opt/lib/
+	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/opt/lib/librpc.so $(1)/opt/lib/
 endef
 
 $(eval $(call BuildPackage,librpc))
