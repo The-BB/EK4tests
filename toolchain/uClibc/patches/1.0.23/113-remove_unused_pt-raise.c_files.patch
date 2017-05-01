@@ -1,0 +1,63 @@
+From 41315bb358d6d2f82e4e2ca8a6cb08fe69f90d56 Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@openadk.org>
+Date: Thu, 20 Apr 2017 06:55:15 +0200
+Subject: [PATCH] remove unused pt-raise.c files
+
+---
+ .../nptl/sysdeps/unix/sysv/linux/aarch64/pt-raise.c    | 18 ------------------
+ .../nptl/sysdeps/unix/sysv/linux/nds32/pt-raise.c      | 18 ------------------
+ 2 files changed, 36 deletions(-)
+ delete mode 100644 libpthread/nptl/sysdeps/unix/sysv/linux/aarch64/pt-raise.c
+ delete mode 100644 libpthread/nptl/sysdeps/unix/sysv/linux/nds32/pt-raise.c
+
+diff --git a/libpthread/nptl/sysdeps/unix/sysv/linux/aarch64/pt-raise.c b/libpthread/nptl/sysdeps/unix/sysv/linux/aarch64/pt-raise.c
+deleted file mode 100644
+index 6c0d4b5..0000000
+--- a/libpthread/nptl/sysdeps/unix/sysv/linux/aarch64/pt-raise.c
++++ /dev/null
+@@ -1,18 +0,0 @@
+-/* Copyright (C) 2002-2013 Free Software Foundation, Inc.
+-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <nptl/sysdeps/unix/sysv/linux/raise.c>
+diff --git a/libpthread/nptl/sysdeps/unix/sysv/linux/nds32/pt-raise.c b/libpthread/nptl/sysdeps/unix/sysv/linux/nds32/pt-raise.c
+deleted file mode 100644
+index 6c0d4b5..0000000
+--- a/libpthread/nptl/sysdeps/unix/sysv/linux/nds32/pt-raise.c
++++ /dev/null
+@@ -1,18 +0,0 @@
+-/* Copyright (C) 2002-2013 Free Software Foundation, Inc.
+-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <nptl/sysdeps/unix/sysv/linux/raise.c>
+-- 
+2.7.4.GIT
+

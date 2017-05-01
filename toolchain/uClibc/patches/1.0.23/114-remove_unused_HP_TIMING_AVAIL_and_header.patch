@@ -1,0 +1,520 @@
+From 4d466d8adaa02bd45c3d36cb910046c23c83a6f9 Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@openadk.org>
+Date: Sat, 22 Apr 2017 22:44:56 +0200
+Subject: [PATCH] remove unused HP_TIMING_AVAIL and header
+
+cleanup unused and unsupported code.
+---
+ Makefile.in                                    |  4 +-
+ include/.gitignore                             |  1 -
+ libc/sysdeps/linux/common/hp-timing.h          | 82 --------------------------
+ libpthread/nptl/allocatestack.c                | 48 ---------------
+ libpthread/nptl/descr.h                        |  6 --
+ libpthread/nptl/init.c                         |  3 -
+ libpthread/nptl/pthread_clock_gettime.c        | 67 ---------------------
+ libpthread/nptl/pthread_clock_settime.c        | 54 -----------------
+ libpthread/nptl/pthread_create.c               |  7 ---
+ libpthread/nptl/sysdeps/unix/sysv/linux/fork.c |  9 ---
+ librt/clock_gettime.c                          | 64 --------------------
+ 11 files changed, 1 insertion(+), 344 deletions(-)
+ delete mode 100644 libc/sysdeps/linux/common/hp-timing.h
+ delete mode 100644 libpthread/nptl/pthread_clock_gettime.c
+ delete mode 100644 libpthread/nptl/pthread_clock_settime.c
+
+diff --git a/Makefile.in b/Makefile.in
+index 0051199..1754040 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -108,7 +108,6 @@ ALL_HEADERS_COMMON       := $(top_builddir)include/fpu_control.h \
+ 				$(top_builddir)include/jmpbuf-offsets.h \
+ 				$(top_builddir)include/jmpbuf-unwind.h \
+ 				$(top_builddir)include/dl-osinfo.h \
+-				$(top_builddir)include/hp-timing.h \
+ 				$(top_builddir)include/not-cancel.h
+ ALL_HEADERS_BITS_COMMON  := $(addprefix $(top_builddir)include/bits/,$(HEADERS_BITS_COMMON))
+ ALL_HEADERS_BITS_ARCH    := $(addprefix $(top_builddir)include/bits/,$(HEADERS_BITS_ARCH))
+@@ -139,7 +138,7 @@ $(top_builddir)include/fpu_control.h $(top_builddir)include/jmpbuf-offsets.h $(t
+ 		$(LN) -fs $(call rel_srcdir)libc/sysdeps/linux/$(TARGET_ARCH)/$(@F) $@ || \
+ 		$(LN) -fs $(call rel_srcdir)libc/sysdeps/linux/common/$(@F) $@
+ 
+-$(top_builddir)include/dl-osinfo.h $(top_builddir)include/hp-timing.h $(top_builddir)include/not-cancel.h:
++$(top_builddir)include/dl-osinfo.h $(top_builddir)include/not-cancel.h:
+ 	$(do_ln) $(call rel_srcdir)libc/sysdeps/linux/common/$(@F) $@
+ 
+ $(ALL_HEADERS_BITS_COMMON):
+@@ -233,7 +232,6 @@ HEADERS_RM- := \
+ 	dl-osinfo.h \
+ 	jmpbuf-offsets.h \
+ 	jmpbuf-unwind.h \
+-	hp-timing.h \
+ 	not-cancel.h \
+ 	_lfs_64.h \
+ 	bits/uClibc_arch_features.h \
+diff --git a/include/.gitignore b/include/.gitignore
+index 8f86c4c..3461fcd 100644
+--- a/include/.gitignore
++++ b/include/.gitignore
+@@ -15,7 +15,6 @@
+ /bfin_sram.h
+ /dl-osinfo.h
+ /fpu_control.h
+-/hp-timing.h
+ /jmpbuf-offsets.h
+ /jmpbuf-unwind.h
+ /not-cancel.h
+diff --git a/libc/sysdeps/linux/common/hp-timing.h b/libc/sysdeps/linux/common/hp-timing.h
+deleted file mode 100644
+index bc36f02..0000000
+--- a/libc/sysdeps/linux/common/hp-timing.h
++++ /dev/null
+@@ -1,82 +0,0 @@
+-/* High precision, low overhead timing functions.  Generic version.
+-   Copyright (C) 1998, 2000 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Ulrich Drepper <drepper@cygnus.com>, 1998.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _HP_TIMING_H
+-#define _HP_TIMING_H	1
+-
+-
+-/* There are no generic definitions for the times.  We could write something
+-   using the `gettimeofday' system call where available but the overhead of
+-   the system call might be too high.
+-
+-   In case a platform supports timers in the hardware the following macros
+-   and types must be defined:
+-
+-   - HP_TIMING_AVAIL: test for availability.
+-
+-   - HP_TIMING_INLINE: this macro is non-zero if the functionality is not
+-     implemented using function calls but instead uses some inlined code
+-     which might simply consist of a few assembler instructions.  We have to
+-     know this since we might want to use the macros here in places where we
+-     cannot make function calls.
+-
+-   - hp_timing_t: This is the type for variables used to store the time
+-     values.
+-
+-   - HP_TIMING_ZERO: clear `hp_timing_t' object.
+-
+-   - HP_TIMING_NOW: place timestamp for current time in variable given as
+-     parameter.
+-
+-   - HP_TIMING_DIFF_INIT: do whatever is necessary to be able to use the
+-     HP_TIMING_DIFF macro.
+-
+-   - HP_TIMING_DIFF: compute difference between two times and store it
+-     in a third.  Source and destination might overlap.
+-
+-   - HP_TIMING_ACCUM: add time difference to another variable.  This might
+-     be a bit more complicated to implement for some platforms as the
+-     operation should be thread-safe and 64bit arithmetic on 32bit platforms
+-     is not.
+-
+-   - HP_TIMING_ACCUM_NT: this is the variant for situations where we know
+-     there are no threads involved.
+-
+-   - HP_TIMING_PRINT: write decimal representation of the timing value into
+-     the given string.  This operation need not be inline even though
+-     HP_TIMING_INLINE is specified.
+-
+-*/
+-
+-/* Provide dummy definitions.  */
+-#define HP_TIMING_AVAIL		(0)
+-#define HP_TIMING_INLINE	(0)
+-typedef int hp_timing_t;
+-#define HP_TIMING_ZERO(Var)
+-#define HP_TIMING_NOW(var)
+-#define HP_TIMING_DIFF_INIT()
+-#define HP_TIMING_DIFF(Diff, Start, End)
+-#define HP_TIMING_ACCUM(Sum, Diff)
+-#define HP_TIMING_ACCUM_NT(Sum, Diff)
+-#define HP_TIMING_PRINT(Buf, Len, Val)
+-
+-/* Since this implementation is not available we tell the user about it.  */
+-#define HP_TIMING_NONAVAIL	1
+-
+-#endif	/* hp-timing.h */
+diff --git a/libpthread/nptl/allocatestack.c b/libpthread/nptl/allocatestack.c
+index ccf34d6..2900517 100644
+--- a/libpthread/nptl/allocatestack.c
++++ b/libpthread/nptl/allocatestack.c
+@@ -880,54 +880,6 @@ __reclaim_stacks (void)
+ }
+ 
+ 
+-#if HP_TIMING_AVAIL
+-# undef __find_thread_by_id
+-/* Find a thread given the thread ID.  */
+-attribute_hidden
+-struct pthread *
+-__find_thread_by_id (pid_t tid)
+-{
+-  struct pthread *result = NULL;
+-
+-  lll_lock (stack_cache_lock, LLL_PRIVATE);
+-
+-  /* Iterate over the list with system-allocated threads first.  */
+-  list_t *runp;
+-  list_for_each (runp, &stack_used)
+-    {
+-      struct pthread *curp;
+-
+-      curp = list_entry (runp, struct pthread, list);
+-
+-      if (curp->tid == tid)
+-	{
+-	  result = curp;
+-	  goto out;
+-	}
+-    }
+-
+-  /* Now the list with threads using user-allocated stacks.  */
+-  list_for_each (runp, &__stack_user)
+-    {
+-      struct pthread *curp;
+-
+-      curp = list_entry (runp, struct pthread, list);
+-
+-      if (curp->tid == tid)
+-	{
+-	  result = curp;
+-	  goto out;
+-	}
+-    }
+-
+- out:
+-  lll_unlock (stack_cache_lock, LLL_PRIVATE);
+-
+-  return result;
+-}
+-#endif
+-
+-
+ static void
+ internal_function
+ setxid_mark_thread (struct xid_command *cmdp, struct pthread *t)
+diff --git a/libpthread/nptl/descr.h b/libpthread/nptl/descr.h
+index 06fdbee..218be96 100644
+--- a/libpthread/nptl/descr.h
++++ b/libpthread/nptl/descr.h
+@@ -24,7 +24,6 @@
+ #include <setjmp.h>
+ #include <stdbool.h>
+ #include <sys/types.h>
+-#include <hp-timing.h>
+ #include <list.h>
+ #include <lowlevellock.h>
+ #include <pthreaddef.h>
+@@ -310,11 +309,6 @@ struct pthread
+   /* Lock for synchronizing setxid calls.  */
+   int setxid_futex;
+ 
+-#if HP_TIMING_AVAIL
+-  /* Offset of the CPU clock at start thread start time.  */
+-  hp_timing_t cpuclock_offset;
+-#endif
+-
+   /* If the thread waits to join another one the ID of the latter is
+      stored here.
+ 
+diff --git a/libpthread/nptl/init.c b/libpthread/nptl/init.c
+index 09220c2..74d30c7 100644
+--- a/libpthread/nptl/init.c
++++ b/libpthread/nptl/init.c
+@@ -174,9 +174,6 @@ __pthread_initialize_minimal_internal (void)
+   THREAD_SETMEM (pd, user_stack, true);
+   if (LLL_LOCK_INITIALIZER != 0)
+     THREAD_SETMEM (pd, lock, LLL_LOCK_INITIALIZER);
+-#if HP_TIMING_AVAIL
+-  THREAD_SETMEM (pd, cpuclock_offset, GL(dl_cpuclock_offset));
+-#endif
+ 
+   /* Initialize the robust mutex data.  */
+ #ifdef __PTHREAD_MUTEX_HAVE_PREV
+diff --git a/libpthread/nptl/pthread_clock_gettime.c b/libpthread/nptl/pthread_clock_gettime.c
+deleted file mode 100644
+index 35f8e8a..0000000
+--- a/libpthread/nptl/pthread_clock_gettime.c
++++ /dev/null
+@@ -1,67 +0,0 @@
+-/* Copyright (C) 2001, 2002, 2003 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public License as
+-   published by the Free Software Foundation; either version 2.1 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; see the file COPYING.LIB.  If
+-   not, see <http://www.gnu.org/licenses/>.  */
+-
+-#include <errno.h>
+-#include <stdlib.h>
+-#include <time.h>
+-#include "pthreadP.h"
+-
+-
+-#if HP_TIMING_AVAIL
+-int
+-__pthread_clock_gettime (clockid_t clock_id, hp_timing_t freq,
+-			 struct timespec *tp)
+-{
+-  hp_timing_t tsc;
+-
+-  /* Get the current counter.  */
+-  HP_TIMING_NOW (tsc);
+-
+-  /* This is the ID of the thread we are looking for.  */
+-  pid_t tid = ((unsigned int) clock_id) >> CLOCK_IDFIELD_SIZE;
+-
+-  /* Compute the offset since the start time of the process.  */
+-  if (tid == 0 || tid == THREAD_GETMEM (THREAD_SELF, tid))
+-    /* Our own clock.  */
+-    tsc -= THREAD_GETMEM (THREAD_SELF, cpuclock_offset);
+-  else
+-    {
+-      /* This is more complicated.  We have to locate the thread based
+-	 on the ID.  This means walking the list of existing
+-	 threads.  */
+-      struct pthread *thread = __find_thread_by_id (tid);
+-      if (thread == NULL)
+-	{
+-	  __set_errno (EINVAL);
+-	  return -1;
+-	}
+-
+-      /* There is a race here.  The thread might terminate and the stack
+-	 become unusable.  But this is the user's problem.  */
+-      tsc -= thread->cpuclock_offset;
+-    }
+-
+-  /* Compute the seconds.  */
+-  tp->tv_sec = tsc / freq;
+-
+-  /* And the nanoseconds.  This computation should be stable until
+-     we get machines with about 16GHz frequency.  */
+-  tp->tv_nsec = ((tsc % freq) * 1000000000ull) / freq;
+-
+-  return 0;
+-}
+-#endif
+diff --git a/libpthread/nptl/pthread_clock_settime.c b/libpthread/nptl/pthread_clock_settime.c
+deleted file mode 100644
+index 65aac4f..0000000
+--- a/libpthread/nptl/pthread_clock_settime.c
++++ /dev/null
+@@ -1,54 +0,0 @@
+-/* Copyright (C) 2001, 2002, 2003 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public License as
+-   published by the Free Software Foundation; either version 2.1 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; see the file COPYING.LIB.  If
+-   not, see <http://www.gnu.org/licenses/>.  */
+-
+-#include <errno.h>
+-#include <stdlib.h>
+-#include <time.h>
+-#include "pthreadP.h"
+-
+-
+-#if HP_TIMING_AVAIL
+-int
+-__pthread_clock_settime (clockid_t clock_id, hp_timing_t offset)
+-{
+-  /* This is the ID of the thread we are looking for.  */
+-  pid_t tid = ((unsigned int) clock_id) >> CLOCK_IDFIELD_SIZE;
+-
+-  /* Compute the offset since the start time of the process.  */
+-  if (tid == 0 || tid == THREAD_GETMEM (THREAD_SELF, tid))
+-    /* Our own clock.  */
+-    THREAD_SETMEM (THREAD_SELF, cpuclock_offset, offset);
+-  else
+-    {
+-      /* This is more complicated.  We have to locate the thread based
+-	 on the ID.  This means walking the list of existing
+-	 threads.  */
+-      struct pthread *thread = __find_thread_by_id (tid);
+-      if (thread == NULL)
+-	{
+-	  __set_errno (EINVAL);
+-	  return -1;
+-	}
+-
+-      /* There is a race here.  The thread might terminate and the stack
+-	 become unusable.  But this is the user's problem.  */
+-      thread->cpuclock_offset = offset;
+-    }
+-
+-  return 0;
+-}
+-#endif
+diff --git a/libpthread/nptl/pthread_create.c b/libpthread/nptl/pthread_create.c
+index d39cb27..b11265f 100644
+--- a/libpthread/nptl/pthread_create.c
++++ b/libpthread/nptl/pthread_create.c
+@@ -21,7 +21,6 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include "pthreadP.h"
+-#include <hp-timing.h>
+ #include <ldsodefs.h>
+ #include <atomic.h>
+ #include <resolv.h>
+@@ -225,12 +224,6 @@ start_thread (void *arg)
+ {
+   struct pthread *pd = (struct pthread *) arg;
+ 
+-#if HP_TIMING_AVAIL
+-  /* Remember the time when the thread was started.  */
+-  hp_timing_t now;
+-  HP_TIMING_NOW (now);
+-  THREAD_SETMEM (pd, cpuclock_offset, now);
+-#endif
+ #if defined __UCLIBC_HAS_RESOLVER_SUPPORT__
+   /* Initialize resolver state pointer.  */
+   __resp = &pd->res;
+diff --git a/libpthread/nptl/sysdeps/unix/sysv/linux/fork.c b/libpthread/nptl/sysdeps/unix/sysv/linux/fork.c
+index 49806da..8b4b036 100644
+--- a/libpthread/nptl/sysdeps/unix/sysv/linux/fork.c
++++ b/libpthread/nptl/sysdeps/unix/sysv/linux/fork.c
+@@ -24,7 +24,6 @@
+ #include <sysdep.h>
+ #include <tls.h>
+ #include "fork.h"
+-#include <hp-timing.h>
+ #include <ldsodefs.h>
+ #include <atomic.h>
+ #include <errno.h>
+@@ -152,14 +151,6 @@ fork (void)
+       if (__fork_generation_pointer != NULL)
+ 	*__fork_generation_pointer += 4;
+ 
+-#if HP_TIMING_AVAIL
+-      /* The CPU clock of the thread and process have to be set to zero.  */
+-      hp_timing_t now;
+-      HP_TIMING_NOW (now);
+-      THREAD_SETMEM (self, cpuclock_offset, now);
+-      GL(dl_cpuclock_offset) = now;
+-#endif
+-
+       /* Reset the file list.  These are recursive mutexes.  */
+       fresetlockfiles ();
+ 
+diff --git a/librt/clock_gettime.c b/librt/clock_gettime.c
+index e616163..d87b7e4 100644
+--- a/librt/clock_gettime.c
++++ b/librt/clock_gettime.c
+@@ -187,58 +187,6 @@ maybe_syscall_gettime_cputime (clockid_t clock_id, struct timespec *tp)
+ #include <sys/time.h>
+ #include <ldsodefs.h>
+ 
+-
+-#if HP_TIMING_AVAIL
+-/* Clock frequency of the processor.  We make it a 64-bit variable
+-   because some jokers are already playing with processors with more
+-   than 4GHz.  */
+-static hp_timing_t freq;
+-
+-
+-/* This function is defined in the thread library.  */
+-extern int __pthread_clock_gettime (clockid_t clock_id, hp_timing_t freq,
+-				    struct timespec *tp)
+-     __attribute__ ((__weak__));
+-
+-static int
+-hp_timing_gettime (clockid_t clock_id, struct timespec *tp)
+-{
+-  hp_timing_t tsc;
+-
+-  if (__builtin_expect (freq == 0, 0))
+-    {
+-      /* This can only happen if we haven't initialized the `freq'
+-	 variable yet.  Do this now. We don't have to protect this
+-	 code against multiple execution since all of them should
+-	 lead to the same result.  */
+-      freq = __get_clockfreq ();
+-      if (__builtin_expect (freq == 0, 0))
+-	/* Something went wrong.  */
+-	return -1;
+-    }
+-
+-  if (clock_id != CLOCK_PROCESS_CPUTIME_ID
+-      && __pthread_clock_gettime != NULL)
+-    return __pthread_clock_gettime (clock_id, freq, tp);
+-
+-  /* Get the current counter.  */
+-  HP_TIMING_NOW (tsc);
+-
+-  /* Compute the offset since the start time of the process.  */
+-  tsc -= GL(dl_cpuclock_offset);
+-
+-  /* Compute the seconds.  */
+-  tp->tv_sec = tsc / freq;
+-
+-  /* And the nanoseconds.  This computation should be stable until
+-     we get machines with about 16GHz frequency.  */
+-  tp->tv_nsec = ((tsc % freq) * UINT64_C (1000000000)) / freq;
+-
+-  return 0;
+-}
+-#endif
+-
+-
+ static inline int
+ realtime_gettime (struct timespec *tp)
+ {
+@@ -278,20 +226,8 @@ clock_gettime (clockid_t clock_id, struct timespec *tp)
+ #ifdef SYSDEP_GETTIME_CPU
+       SYSDEP_GETTIME_CPU;
+ #endif
+-#if HP_TIMING_AVAIL
+-      if ((clock_id & ((1 << CLOCK_IDFIELD_SIZE) - 1))
+-	  == CLOCK_THREAD_CPUTIME_ID)
+-	retval = hp_timing_gettime (clock_id, tp);
+-      else
+-#endif
+ 	__set_errno (EINVAL);
+       break;
+-
+-#if HP_TIMING_AVAIL && !defined HANDLED_CPUTIME
+-    case CLOCK_PROCESS_CPUTIME_ID:
+-      retval = hp_timing_gettime (clock_id, tp);
+-      break;
+-#endif
+     }
+ 
+   return retval;
+-- 
+2.7.4.GIT

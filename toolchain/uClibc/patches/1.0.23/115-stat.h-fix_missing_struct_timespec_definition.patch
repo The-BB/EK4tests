@@ -1,0 +1,40 @@
+From da89381bc71a7434fe0cb81e5f2e6be05ee9420e Mon Sep 17 00:00:00 2001
+From: Damien Riegel <damien.riegel@savoirfairelinux.com>
+Date: Sat, 22 Apr 2017 13:30:46 -0400
+Subject: [PATCH] sys/stat.h: fix missing struct timespec definition
+
+This is a second attempt to fix a compilation failure involving a
+missing struct timespec definition in some situation. Previous attempt
+was following commit but it had undesirable side effects and was
+reverted:
+
+  657c4a9d6c fcntl.h: fix a missing `struct timespec` definition
+
+A similar issue was identified and reported in glibc [1], and the fix
+was to include the timespec definition if __USE_XOPEN2K8 was defined. To
+minimize the possible impact of this new fix, it was decided to not
+replace __USE_ATFILE by __USE_XOPEN2K8 as glibc did, but to add an
+additional OR condition on __USE_XOPEN2K8.
+
+[1] https://sourceware.org/bugzilla/show_bug.cgi?id=21371
+
+Signed-off-by: Damien Riegel <damien.riegel@savoirfairelinux.com>
+---
+ include/sys/stat.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/sys/stat.h b/include/sys/stat.h
+index 495a68c..079e779 100644
+--- a/include/sys/stat.h
++++ b/include/sys/stat.h
+@@ -32,7 +32,7 @@
+ # if defined __USE_XOPEN || defined __USE_XOPEN2K
+ #  define __need_time_t
+ # endif
+-# if defined __USE_MISC || defined __USE_ATFILE
++# if defined __USE_MISC || defined __USE_ATFILE || defined __USE_XOPEN2K8
+ #  define __need_timespec
+ # endif
+ # include <time.h>		/* For time_t resp. timespec.  */
+-- 
+2.7.4.GIT
