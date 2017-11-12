@@ -8,10 +8,11 @@
 
 include $(TOPDIR)/rules.mk
 PKG_NAME:=toolchain
-PKG_RELEASE:=1
 
-ifeq ($(CONFIG_USE_GLIBC),y)
-        PKG_RELEASE=1
+ifeq ($(CONFIG_USE_UCLIBC),y)
+  PKG_RELEASE:=1
+else
+  PKG_RELEASE:=1
 endif
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
@@ -102,8 +103,8 @@ then
 		echo "BE detected"
 		be='.be'
 	fi
-	wget http://pkg.entware.net/binaries/other/locale-archive.2.23$$be -O /opt/usr/lib/locale/locale-archive
-	echo "You can download locale sources from http://pkg.entware.net/sources/i18n_glib223.tar.gz"
+	wget http://pkg.entware.net/binaries/other/locale-archive.2.25$$be -O /opt/usr/lib/locale/locale-archive
+	echo "You can download locale sources from http://pkg.entware.net/sources/i18n_glib225.tar.gz"
 	echo "You can add new locales to Entware using /opt/bin/localedef.new"
 fi
 
@@ -244,7 +245,7 @@ define Package/libc/config
 		string
 		prompt "libc shared library files (use wildcards)"
 		depends on EXTERNAL_TOOLCHAIN && PACKAGE_libc
-		default "./lib/ld{*.so*,-linux*.so.*} ./lib/lib{anl,c,cidn,crypt,dl,m,nsl,nss_dns,nss_files,resolv,util}{-*.so,.so.*}"
+		default "./lib/ld{*.so*,-linux*.so.*} ./lib/lib{anl,c,cidn,crypt,dl,m,nsl,nss_dns,nss_files,resolv,util}{-*.so,.so.*,.so}"
 
 	endmenu
 endef
