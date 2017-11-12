@@ -1,0 +1,10 @@
+commit 12f9305c12d0c6c274a61fc577a36be93a634de4
+Author: Felix Fietkau <nbd@nbd.name>
+Date:   Sat Nov 11 13:15:24 2017 +0100
+
+    wireguard: fix portability issue
+    
+    Check if the compiler defines __linux__, instead of assuming that the
+    host OS is the same as the target OS.
+    
+    Signed-off-by: Felix Fietkau <nbd@nbd.name>
