@@ -21,16 +21,17 @@ proto_qmi_init_config() {
 	proto_config_add_int profile
 	proto_config_add_boolean dhcpv6
 	proto_config_add_boolean autoconnect
+	proto_config_add_int plmn
 	proto_config_add_defaults
 }
 
 proto_qmi_setup() {
 	local interface="$1"
 
-	local device apn auth username password pincode delay modes pdptype profile dhcpv6 autoconnect $PROTO_DEFAULT_OPTIONS
+	local device apn auth username password pincode delay modes pdptype profile dhcpv6 autoconnect plmn $PROTO_DEFAULT_OPTIONS
 	local cid_4 pdh_4 cid_6 pdh_6
 	local ip_6 ip_prefix_length gateway_6 dns1_6 dns2_6
-	json_get_vars device apn auth username password pincode delay modes pdptype profile dhcpv6 autoconnect $PROTO_DEFAULT_OPTIONS
+	json_get_vars device apn auth username password pincode delay modes pdptype profile dhcpv6 autoconnect plmn $PROTO_DEFAULT_OPTIONS
 
 	[ "$metric" = "" ] && metric="0"
 
@@ -42,6 +43,8 @@ proto_qmi_setup() {
 		proto_set_available "$interface" 0
 		return 1
 	}
+
+	device="$(readlink -f $device)"
 	[ -c "$device" ] || {
 		echo "The specified control device does not exist"
 		proto_notify_error "$interface" NO_DEVICE
@@ -62,11 +65,12 @@ proto_qmi_setup() {
 	[ -n "$delay" ] && sleep "$delay"
 
 	while uqmi -s -d "$device" --get-pin-status | grep '"UIM uninitialized"' > /dev/null; do
+		[ -e "$device" ] || return 1
 		sleep 1;
 	done
 
 	[ -n "$pincode" ] && {
-		uqmi -s -d "$device" --verify-pin1 "$pincode" || {
+		uqmi -s -d "$device" --verify-pin1 "$pincode" || uqmi -s -d "$device" --uim-verify-pin1 "$pincode" || {
 			echo "Unable to verify PIN"
 			proto_notify_error "$interface" PIN_FAILED
 			proto_block_restart "$interface"
@@ -74,11 +78,32 @@ proto_qmi_setup() {
 		}
 	}
 
+	[ -n "$plmn" ] && {
+		local mcc mnc
+		if [ "$plmn" = 0 ]; then
+			mcc=0
+			mnc=0
+			echo "Setting PLMN to auto"
+		else
+			mcc=${plmn:0:3}
+			mnc=${plmn:3}
+			echo "Setting PLMN to $plmn"
+		fi
+		uqmi -s -d "$device" --set-plmn --mcc "$mcc" --mnc "$mnc" || {
+			echo "Unable to set PLMN"
+			proto_notify_error "$interface" PLMN_FAILED
+			proto_block_restart "$interface"
+			return 1
+		}
+	}
+
 	uqmi -s -d "$device" --set-data-format 802.3
 	uqmi -s -d "$device" --wda-set-data-format 802.3
+	uqmi -s -d "$device" --sync
 
 	echo "Waiting for network registration"
 	while uqmi -s -d "$device" --get-serving-system | grep '"searching"' > /dev/null; do
+		[ -e "$device" ] || return 1
 		sleep 5;
 	done
 
@@ -86,7 +111,7 @@ proto_qmi_setup() {
 
 	echo "Starting network $interface"
 
-	pdptype=`echo "$pdptype" | awk '{print tolower($0)}'`
+	pdptype=$(echo "$pdptype" | awk '{print tolower($0)}')
 	[ "$pdptype" = "ip" -o "$pdptype" = "ipv6" -o "$pdptype" = "ipv4v6" ] || pdptype="ip"
 
 	if [ "$pdptype" = "ip" ]; then
@@ -97,7 +122,7 @@ proto_qmi_setup() {
 	fi
 
 	[ "$pdptype" = "ip" -o "$pdptype" = "ipv4v6" ] && {
-		cid_4=`uqmi -s -d "$device" --get-client-id wds`
+		cid_4=$(uqmi -s -d "$device" --get-client-id wds)
 		[ $? -ne 0 ] && {
 			echo "Unable to obtain client ID"
 			proto_notify_error "$interface" NO_CID
@@ -111,14 +136,14 @@ proto_qmi_setup() {
 			--stop-network 0xffffffff \
 			--autoconnect > /dev/null
 
-		pdh_4=`uqmi -s -d "$device" --set-client-id wds,"$cid_4" \
+		pdh_4=$(uqmi -s -d "$device" --set-client-id wds,"$cid_4" \
 			--start-network \
 			${apn:+--apn $apn} \
 			${profile:+--profile $profile} \
 			${auth:+--auth-type $auth} \
 			${username:+--username $username} \
 			${password:+--password $password} \
-			${autoconnect:+--autoconnect}`
+			${autoconnect:+--autoconnect})
 		[ $? -ne 0 ] && {
 			echo "Unable to connect IPv4"
 			uqmi -s -d "$device" --set-client-id wds,"$cid_4" --release-client-id wds
@@ -128,7 +153,7 @@ proto_qmi_setup() {
 	}
 
 	[ "$pdptype" = "ipv6" -o "$pdptype" = "ipv4v6" ] && {
-		cid_6=`uqmi -s -d "$device" --get-client-id wds`
+		cid_6=$(uqmi -s -d "$device" --get-client-id wds)
 		[ $? -ne 0 ] && {
 			echo "Unable to obtain client ID"
 			proto_notify_error "$interface" NO_CID
@@ -142,14 +167,14 @@ proto_qmi_setup() {
 			--stop-network 0xffffffff \
 			--autoconnect > /dev/null
 
-		pdh_6=`uqmi -s -d "$device" --set-client-id wds,"$cid_6" \
+		pdh_6=$(uqmi -s -d "$device" --set-client-id wds,"$cid_6" \
 			--start-network \
 			${apn:+--apn $apn} \
 			${profile:+--profile $profile} \
 			${auth:+--auth-type $auth} \
 			${username:+--username $username} \
 			${password:+--password $password} \
-			${autoconnect:+--autoconnect}`
+			${autoconnect:+--autoconnect})
 		[ $? -ne 0 ] && {
 			echo "Unable to connect IPv6"
 			uqmi -s -d "$device" --set-client-id wds,"$cid_6" --release-client-id wds
