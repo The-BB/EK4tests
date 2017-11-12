@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gdb
-PKG_VERSION:=7.12.1
-PKG_RELEASE:=2
+PKG_VERSION:=8.0.1
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=@GNU/gdb
-PKG_HASH:=4607680b973d3ec92c30ad029f1b7dbde3876869e6b3a117d8a7e90081113186
+PKG_HASH:=3dbd5f93e36ba2815ad0efab030dcd0c7b211d7b353a40a53f4c02d7d56295e3
 
 PKG_BUILD_PARALLEL:=1
 PKG_INSTALL:=1
@@ -55,10 +55,15 @@ CONFIGURE_ARGS+= \
 	--with-system-readline \
 	--without-expat \
 	--without-lzma \
+	--disable-sim \
 	--disable-werror
 
 CONFIGURE_VARS+= \
 	ac_cv_search_tgetent="$(TARGET_LDFLAGS) -lncurses -lreadline"
+
+TARGET_LDFLAGS+= \
+	-static-libstdc++ \
+	-Wl,--gc-sections
 
 define Build/Compile
 	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) \
