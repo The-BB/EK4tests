@@ -24,6 +24,12 @@ endif
 ifeq ($(PKG_VERSION),1.0.24)
 PKG_HASH:=b5bf5bea5d836b0a0724d94f2211b279df3f5bda18a95e02c728cbf4bd33e939
 endif
+ifeq ($(PKG_VERSION),1.0.25)
+PKG_HASH:=a1208bd54fd8cbcc716140d985e228cf2f7e6265aa694c7f516fa6cb598808b2
+endif
+ifeq ($(PKG_VERSION),1.0.26)
+PKG_HASH:=d88470775192b01d278633953ccc9fecacd090e52f401d506a71add3e47d4694
+endif
 
 PATCH_DIR:=$(PATH_PREFIX)/patches/$(PKG_VERSION)
 CONFIG_DIR:=$(PATH_PREFIX)/config/$(PKG_VERSION)
@@ -95,7 +101,7 @@ define Host/Configure
 		$(HOST_BUILD_DIR)/.config.new
 	cmp -s $(HOST_BUILD_DIR)/.config.new $(HOST_BUILD_DIR)/.config.last || { \
 		cp $(HOST_BUILD_DIR)/.config.new $(HOST_BUILD_DIR)/.config && \
-		$(MAKE) -C $(HOST_BUILD_DIR) oldconfig KBUILD_HAVE_NLS= HOSTCFLAGS="-DKBUILD_NO_NLS" && \
+		$(MAKE) -C $(HOST_BUILD_DIR) olddefconfig KBUILD_HAVE_NLS= HOSTCFLAGS="-DKBUILD_NO_NLS" && \
 		$(MAKE) -C $(HOST_BUILD_DIR)/extra/config conf KBUILD_HAVE_NLS= HOSTCFLAGS="-DKBUILD_NO_NLS" && \
 		cp $(HOST_BUILD_DIR)/.config.new $(HOST_BUILD_DIR)/.config.last; \
 	}
