@@ -1,0 +1,62 @@
+From 8b233f2491b286a2bd741b042719fdf5fde50eb2 Mon Sep 17 00:00:00 2001
+From: Guo Ren <ren_guo@c-sky.com>
+Date: Mon, 25 Sep 2017 21:15:04 +0800
+Subject: preadv/pwritev: bugfix preadv/pwritev syscall should be 5 args
+
+The current uclibc-ng use 4 arguments, and this will cause
+ltp-testsuite's preadv/pwritev case failed.
+
+The syscall of preadv/pwritev in current linux-kernel is 5 arguments:
+
+linux/fs/read_write.c:
+
+SYSCALL_DEFINE5(preadv, unsigned long, fd, const struct iovec __user *, vec,
+	unsigned long, vlen, unsigned long, pos_l, unsigned long, pos_h)
+
+SYSCALL_DEFINE5(pwritev, unsigned long, fd, const struct iovec __user *, vec,
+	unsigned long, vlen, unsigned long, pos_l, unsigned long, pos_h)
+
+So just update to 5-args-syscall, and off_t could be 32bit or 64bit.
+
+Signed-off-by: Guo Ren <ren_guo@c-sky.com>
+---
+ libc/sysdeps/linux/common/preadv.c  | 7 ++++++-
+ libc/sysdeps/linux/common/pwritev.c | 7 ++++++-
+ 2 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/libc/sysdeps/linux/common/preadv.c b/libc/sysdeps/linux/common/preadv.c
+index b90291b..fd9dde4 100644
+--- a/libc/sysdeps/linux/common/preadv.c
++++ b/libc/sysdeps/linux/common/preadv.c
+@@ -23,6 +23,11 @@
+ ssize_t
+ preadv (int fd, const struct iovec *vector, int count, off_t offset)
+ {
+-  return INLINE_SYSCALL (preadv, 4, fd, vector, count, offset);
++  unsigned long pos_l, pos_h;
++
++  pos_h = (unsigned long)((long long)offset >> 32);
++  pos_l = (unsigned long)((long long)offset);	
++
++  return INLINE_SYSCALL (preadv, 5, fd, vector, count, pos_l, pos_h);
+ }
+ #endif
+diff --git a/libc/sysdeps/linux/common/pwritev.c b/libc/sysdeps/linux/common/pwritev.c
+index a1880ed..bef5bcf 100644
+--- a/libc/sysdeps/linux/common/pwritev.c
++++ b/libc/sysdeps/linux/common/pwritev.c
+@@ -23,6 +23,11 @@
+ ssize_t
+ pwritev (int fd, const struct iovec *vector, int count, off_t offset)
+ {
+-  return INLINE_SYSCALL (pwritev, 4, fd, vector, count, offset);
++  unsigned long pos_l, pos_h;
++
++  pos_h = (unsigned long)((long long)offset >> 32);
++  pos_l = (unsigned long)((long long)offset);
++
++  return INLINE_SYSCALL (pwritev, 5, fd, vector, count, pos_l, pos_h);
+ }
+ #endif
+-- 
+cgit v0.11.2-3-g2eb4

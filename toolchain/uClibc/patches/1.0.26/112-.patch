@@ -1,0 +1,29 @@
+From 630253231ead2d0dd2f1728daf4f3ff8402c4b84 Mon Sep 17 00:00:00 2001
+From: Guo Ren <ren_guo@c-sky.com>
+Date: Mon, 9 Oct 2017 22:57:45 +0800
+Subject: libpthread/nptl: bugfix compile warning.
+
+warning: unused variable 'self' [-Wunused-variable]
+
+Signed-off-by: Guo Ren <ren_guo@c-sky.com>
+---
+ libpthread/nptl/sysdeps/unix/sysv/linux/fork.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/libpthread/nptl/sysdeps/unix/sysv/linux/fork.c b/libpthread/nptl/sysdeps/unix/sysv/linux/fork.c
+index 8b4b036..9b96152 100644
+--- a/libpthread/nptl/sysdeps/unix/sysv/linux/fork.c
++++ b/libpthread/nptl/sysdeps/unix/sysv/linux/fork.c
+@@ -144,9 +144,7 @@ fork (void)
+ 
+   if (pid == 0)
+     {
+-      struct pthread *self = THREAD_SELF;
+-
+-      assert (THREAD_GETMEM (self, tid) != ppid);
++      assert (THREAD_GETMEM (THREAD_SELF, tid) != ppid);
+ 
+       if (__fork_generation_pointer != NULL)
+ 	*__fork_generation_pointer += 4;
+-- 
+cgit v0.11.2-3-g2eb4

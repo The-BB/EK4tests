@@ -1,0 +1,31 @@
+From d9f7022736fd429c6c62c93441804dc87900ed6f Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@uclibc-ng.org>
+Date: Sun, 20 Aug 2017 12:52:36 +0200
+Subject: locale: use a better fallback
+
+Ensure to always allow a build and fallback to C.UTF-8
+and even C.
+
+Signed-off-by: Eugene Yudin <e.yudin@ndmsystems.com>
+---
+ extra/locale/Makefile.in | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/extra/locale/Makefile.in b/extra/locale/Makefile.in
+index c23461a..cbf0ca5 100644
+--- a/extra/locale/Makefile.in
++++ b/extra/locale/Makefile.in
+@@ -166,9 +166,9 @@ $(locale_OUT)/c8tables.h: $(locale_OUT)/gen_wc8bit $(locale_OUT)/codesets.txt
+ # Warning! Beware tr_TR toupper/tolower exceptions!
+ $(locale_OUT)/wctables.h: $(locale_OUT)/gen_wctype
+ 	@$(disp_gen)
+-	$(Q)for locale in $(call qstrip,$(UCLIBC_BUILD_MINIMAL_LOCALES)) en_US en_GB; do \
+-		$< $(FLAG-locale-verbose) $$locale > $@ || \
++	$(Q)for locale in $(call qstrip,$(UCLIBC_BUILD_MINIMAL_LOCALES)) C; do \
+ 		$< $(FLAG-locale-verbose) $$locale.UTF-8 > $@ || \
++		$< $(FLAG-locale-verbose) $$locale > $@ || \
+ 		$< $(FLAG-locale-verbose) $$locale.iso8859-1 > $@ && break; \
+ 	done
+ 
+-- 
+cgit v0.11.2-3-g2eb4

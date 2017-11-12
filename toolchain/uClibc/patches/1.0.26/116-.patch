@@ -1,0 +1,27 @@
+From 43ed688c7f125360733b1be77b8217accef4510f Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@uclibc-ng.org>
+Date: Tue, 31 Oct 2017 16:51:25 +0100
+Subject: fix multilib dir
+
+Signed-off-by: Alex Potapenko <opotapenko@gmail.com>
+Signed-off-by: Waldemar Brodkorb <wbx@uclibc-ng.org>
+---
+ ldso/ldso/dl-elf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ldso/ldso/dl-elf.c b/ldso/ldso/dl-elf.c
+index 016d468..930ccac 100644
+--- a/ldso/ldso/dl-elf.c
++++ b/ldso/ldso/dl-elf.c
+@@ -313,7 +313,7 @@ struct elf_resolve *_dl_load_shared_library(unsigned int rflags, struct dyn_elf
+ 	_dl_if_debug_dprint("\tsearching multilib lib path list\n");
+ 	tpnt1 = search_for_named_library(libname, rflags,
+ 					UCLIBC_RUNTIME_PREFIX LDSO_MULTILIB_DIR ":"
+-					UCLIBC_RUNTIME_PREFIX "usr" LDSO_MULTILIB_DIR,
++					UCLIBC_RUNTIME_PREFIX "usr/" LDSO_MULTILIB_DIR,
+ 					rpnt, NULL);
+ 	if (tpnt1 != NULL)
+ 		return tpnt1;
+-- 
+cgit v0.11.2-3-g2eb4
+

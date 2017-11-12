@@ -1,0 +1,59 @@
+From 7cfd2112acbc7a9dfcd9f8a23e550672934a2545 Mon Sep 17 00:00:00 2001
+From: Guo Ren <ren_guo@c-sky.com>
+Date: Mon, 25 Sep 2017 21:20:42 +0800
+Subject: statfs: bugfix statfs02 fstatfs02 failed in ltp-testsuite
+
+In the test-case of statfs from ltp-testsuite, it pass -1 to 2th
+argument. eg: fstatfs(fd , -1)
+
+When uclibc-ng parse the buf32 to buf will cause illegal address
+access, the kernel will signal the process with SIGSEGV.
+
+If we pass the -1 directly to the syscall of statfs/fstatfs, kernel
+use copy_to_user() to prevent the signal of SIGSEGV and just return
+EINVAL.
+
+This is the ltp-testsuite expect.
+
+Signed-off-by: Guo Ren <ren_guo@c-sky.com>
+---
+ libc/misc/statfs/fstatfs64.c | 4 +++-
+ libc/misc/statfs/statfs64.c  | 4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/libc/misc/statfs/fstatfs64.c b/libc/misc/statfs/fstatfs64.c
+index 7221a0b..bb9ca30 100644
+--- a/libc/misc/statfs/fstatfs64.c
++++ b/libc/misc/statfs/fstatfs64.c
+@@ -33,9 +33,11 @@ int fstatfs64 (int fd, struct statfs64 *buf)
+ {
+     struct statfs buf32;
+ 
+-    if (__libc_fstatfs (fd, &buf32) < 0)
++    if (__libc_fstatfs (fd, (struct statfs *)buf) < 0)
+ 	return -1;
+ 
++    buf32 = *(struct statfs *)buf;
++
+     buf->f_type = buf32.f_type;
+     buf->f_bsize = buf32.f_bsize;
+     buf->f_blocks = buf32.f_blocks;
+diff --git a/libc/misc/statfs/statfs64.c b/libc/misc/statfs/statfs64.c
+index b1a33b7..7317870 100644
+--- a/libc/misc/statfs/statfs64.c
++++ b/libc/misc/statfs/statfs64.c
+@@ -31,9 +31,11 @@ int statfs64 (const char *file, struct statfs64 *buf)
+ {
+     struct statfs buf32;
+ 
+-    if (__libc_statfs (file, &buf32) < 0)
++    if (__libc_statfs (file, (struct statfs *)buf) < 0)
+ 	return -1;
+ 
++    buf32 = *(struct statfs *)buf;
++
+     buf->f_type = buf32.f_type;
+     buf->f_bsize = buf32.f_bsize;
+     buf->f_blocks = buf32.f_blocks;
+-- 
+cgit v0.11.2-3-g2eb4

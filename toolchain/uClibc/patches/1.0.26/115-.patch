@@ -1,0 +1,29 @@
+From ea1d2349fcff7b68d8473aee4a3e2a301e838bc6 Mon Sep 17 00:00:00 2001
+From: Yitai Schwartz <yitai27@gmail.com>
+Date: Sat, 28 Oct 2017 02:11:10 +0300
+Subject: malloc-standard/malloc.h: use getpagesize
+
+sysconf creates a lot of code dependencies.
+getpagesize dosen't.
+staticly linked code that calls malloc is now much smaller.
+
+Signed-off-by: Waldemar Brodkorb <wbx@uclibc-ng.org>
+---
+ libc/stdlib/malloc-standard/malloc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libc/stdlib/malloc-standard/malloc.h b/libc/stdlib/malloc-standard/malloc.h
+index f3e2d2a..44120d3 100644
+--- a/libc/stdlib/malloc-standard/malloc.h
++++ b/libc/stdlib/malloc-standard/malloc.h
+@@ -138,7 +138,7 @@ __UCLIBC_MUTEX_EXTERN(__malloc_lock)
+ */
+ #ifndef malloc_getpagesize
+ #  include <unistd.h>
+-#  define malloc_getpagesize sysconf(_SC_PAGESIZE)
++#  define malloc_getpagesize getpagesize()
+ #else /* just guess */
+ #  define malloc_getpagesize (4096)
+ #endif
+-- 
+cgit v0.11.2-3-g2eb4

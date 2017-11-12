@@ -1,0 +1,96 @@
+From 490b84a72c8eecf03e8befbdcf973e468f2d310c Mon Sep 17 00:00:00 2001
+From: Anton Kolesov <Anton.Kolesov@synopsys.com>
+Date: Wed, 28 Jun 2017 20:04:33 +0300
+Subject: arc: Ensure that debugger can recognize sigrestorer
+
+An issue has been found with current implementation of signal restorer
+function in uClibc and how GDB handles it. When debugger information is not
+present, everything worked fine, because GDB would use a built-in logic to
+determine if function is a signal restorer. However when debugging information
+is present, debugger would rely solely on it and wouldn't use ARC-specific
+functions to detect signal handler frames. Because debug information for signal restorer is generated
+completely by the compiler, it lacks a marker, that identifies this as a
+signal frame that requires special handling. While it is possible to insert
+that marker via inline assembly, that still doesn't solve the whole problem,
+because some other expectations are not met by the debug information - there
+is no "nop" in front of the function, needed to fool debugger into thinking
+that this was a function call, and references to previous frame information
+need to be described manually. The simplest way to fix the problem is just
+to make sure that signal restorer function will not have any debug function
+at all, which can be done by writing it in assembly.
+
+Alternative, more complex, solution, where debug information for signal
+frame is manually defined can be found in
+glibc/sysdeps/unix/sysv/linux/x86_64/sigaction.c [1].
+
+[1] https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/x86_64/sigaction.c;hb=HEAD
+
+Signed-off-by: Anton Kolesov <Anton.Kolesov@synopsys.com>
+---
+ libc/sysdeps/linux/arc/Makefile.arch |  3 ++-
+ libc/sysdeps/linux/arc/sigaction.c   |  6 +-----
+ libc/sysdeps/linux/arc/sigrestorer.S | 25 +++++++++++++++++++++++++
+ 3 files changed, 28 insertions(+), 6 deletions(-)
+ create mode 100644 libc/sysdeps/linux/arc/sigrestorer.S
+
+diff --git a/libc/sysdeps/linux/arc/Makefile.arch b/libc/sysdeps/linux/arc/Makefile.arch
+index 1a52fc9..a4aa72c 100644
+--- a/libc/sysdeps/linux/arc/Makefile.arch
++++ b/libc/sysdeps/linux/arc/Makefile.arch
+@@ -7,4 +7,5 @@
+ 
+ CSRC-y := syscall.c sigaction.c __syscall_error.c cacheflush.c
+ 
+-SSRC-y := __longjmp.S setjmp.S bsd-setjmp.S bsd-_setjmp.S vfork.S clone.S
++SSRC-y := __longjmp.S setjmp.S bsd-setjmp.S bsd-_setjmp.S vfork.S clone.S \
++	sigrestorer.S
+diff --git a/libc/sysdeps/linux/arc/sigaction.c b/libc/sysdeps/linux/arc/sigaction.c
+index 67ca38a..64a6255 100644
+--- a/libc/sysdeps/linux/arc/sigaction.c
++++ b/libc/sysdeps/linux/arc/sigaction.c
+@@ -13,11 +13,7 @@
+ /*
+  * Default sigretrun stub if user doesn't specify SA_RESTORER
+  */
+-static void attribute_optimize("Os") __attribute_noinline__
+-__default_rt_sa_restorer(void)
+-{
+-	INTERNAL_SYSCALL_NCS(__NR_rt_sigreturn, , 0);
+-}
++extern void __default_rt_sa_restorer(void);
+ 
+ #define SA_RESTORER	0x04000000
+ 
+diff --git a/libc/sysdeps/linux/arc/sigrestorer.S b/libc/sysdeps/linux/arc/sigrestorer.S
+new file mode 100644
+index 0000000..e4deb6b
+--- /dev/null
++++ b/libc/sysdeps/linux/arc/sigrestorer.S
+@@ -0,0 +1,25 @@
++/*
++ * Copyright (C) 2017 Synopsys, Inc. (www.synopsys.com)
++ *
++ * Licensed under the LGPL v2.1 or later, see the file COPYING.LIB in this tarball.
++ */
++
++#include <sysdep.h>
++
++/*
++ * Default sigretrun stub if user doesn't specify SA_RESTORER.
++ */
++
++.section .text
++.align 4
++.global __default_rt_sa_restorer
++.type __default_rt_sa_restorer, @function
++
++; This "nop" is needed here, because debugger would assume that this function
++; called the signal handler, therefore it cannot start on the "mov"
++; instruction, at which execution will jump to.
++	nop
++__default_rt_sa_restorer:
++	mov r8, __NR_rt_sigreturn
++	ARC_TRAP_INSN
++
+-- 
+cgit v0.11.2-3-g2eb4

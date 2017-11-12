@@ -1,0 +1,10 @@
+--- a/libc/sysdeps/linux/mips/bits/mman.h
++++ b/libc/sysdeps/linux/mips/bits/mman.h
+@@ -65,6 +65,7 @@
+ # define MAP_LOCKED	0x8000		/* pages are locked */
+ # define MAP_POPULATE   0x10000         /* populate (prefault) pagetables */
+ # define MAP_NONBLOCK   0x20000         /* do not block on IO */
++# define MAP_STACK      0x40000         /* give out an address that is best suited for process/thread stacks */
+ # define MAP_UNINITIALIZED 0x4000000    /* For anonymous mmap, memory could
+ 					   be uninitialized. */
+ #endif

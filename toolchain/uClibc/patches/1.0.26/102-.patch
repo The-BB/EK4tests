@@ -1,0 +1,91 @@
+From 06eb521140f043454697f6a1d5593cb4f8bcfbe7 Mon Sep 17 00:00:00 2001
+From: Waldemar Brodkorb <wbx@openadk.org>
+Date: Thu, 10 Aug 2017 19:50:07 +0200
+Subject: sys/ptrace.h: remove obsolete Linux PTRACE_SEIZE_DEVEL constant
+
+Remove enum __ptrace_flags along with the only constant it contains,
+PTRACE_SEIZE_DEVEL, from Linux's sys/ptrace.h files.
+
+Following GNU C library commit:
+60e2846e2633a990bdf474004a373bde54c0bc5f
+---
+ libc/sysdeps/linux/common/sys/ptrace.h  | 7 -------
+ libc/sysdeps/linux/powerpc/sys/ptrace.h | 7 -------
+ libc/sysdeps/linux/sparc/sys/ptrace.h   | 7 -------
+ libc/sysdeps/linux/sparc64/sys/ptrace.h | 7 -------
+ 4 files changed, 28 deletions(-)
+
+diff --git a/libc/sysdeps/linux/common/sys/ptrace.h b/libc/sysdeps/linux/common/sys/ptrace.h
+index 7a7998a..6b3c7b5 100644
+--- a/libc/sysdeps/linux/common/sys/ptrace.h
++++ b/libc/sysdeps/linux/common/sys/ptrace.h
+@@ -148,13 +148,6 @@ enum __ptrace_request
+   PTRACE_LISTEN = 0x4208
+ };
+ 
+-
+-/* Flag for PTRACE_LISTEN.  */
+-enum __ptrace_flags
+-{
+-  PTRACE_SEIZE_DEVEL = 0x80000000
+-};
+-
+ /* Options set using PTRACE_SETOPTIONS.  */
+ enum __ptrace_setoptions
+ {
+diff --git a/libc/sysdeps/linux/powerpc/sys/ptrace.h b/libc/sysdeps/linux/powerpc/sys/ptrace.h
+index dd81efc..b747a2e 100644
+--- a/libc/sysdeps/linux/powerpc/sys/ptrace.h
++++ b/libc/sysdeps/linux/powerpc/sys/ptrace.h
+@@ -123,13 +123,6 @@ enum __ptrace_request
+ #define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
+ };
+ 
+-
+-/* Flag for PTRACE_LISTEN.  */
+-enum __ptrace_flags
+-{
+-  PTRACE_SEIZE_DEVEL = 0x80000000
+-};
+-
+ /* Options set using PTRACE_SETOPTIONS.  */
+ enum __ptrace_setoptions
+ {
+diff --git a/libc/sysdeps/linux/sparc/sys/ptrace.h b/libc/sysdeps/linux/sparc/sys/ptrace.h
+index d43acdf..3d94317 100644
+--- a/libc/sysdeps/linux/sparc/sys/ptrace.h
++++ b/libc/sysdeps/linux/sparc/sys/ptrace.h
+@@ -171,13 +171,6 @@ enum __ptrace_request
+ #define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
+ };
+ 
+-
+-/* Flag for PTRACE_LISTEN.  */
+-enum __ptrace_flags
+-{
+-  PTRACE_SEIZE_DEVEL = 0x80000000
+-};
+-
+ /* Options set using PTRACE_SETOPTIONS.  */
+ enum __ptrace_setoptions
+ {
+diff --git a/libc/sysdeps/linux/sparc64/sys/ptrace.h b/libc/sysdeps/linux/sparc64/sys/ptrace.h
+index cd6675d..2f2111f 100644
+--- a/libc/sysdeps/linux/sparc64/sys/ptrace.h
++++ b/libc/sysdeps/linux/sparc64/sys/ptrace.h
+@@ -171,13 +171,6 @@ enum __ptrace_request
+ #define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
+ };
+ 
+-
+-/* Flag for PTRACE_LISTEN.  */
+-enum __ptrace_flags
+-{
+-  PTRACE_SEIZE_DEVEL = 0x80000000
+-};
+-
+ /* Options set using PTRACE_SETOPTIONS.  */
+ enum __ptrace_setoptions
+ {
+-- 
+cgit v0.11.2-3-g2eb4
