@@ -26,20 +26,36 @@ PKG_VERSION:=$(firstword $(subst +, ,$(GCC_VERSION)))
 GCC_DIR:=$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_SOURCE_URL:=@GNU/gcc/gcc-$(PKG_VERSION)
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 
 ifeq ($(PKG_VERSION),5.4.0)
   PKG_HASH:=608df76dec2d34de6558249d8af4cbee21eceddbcb580d666f7a5a583ca3303a
+  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+endif
+
+ifeq ($(PKG_VERSION),5.5.0)
+  PKG_HASH:=530cea139d82fe542b358961130c69cfde8b3d14556370b65823d2f91f0ced87
 endif
 
 ifeq ($(PKG_VERSION),6.3.0)
   PKG_HASH:=f06ae7f3f790fbf0f018f6d40e844451e6bc3b7bc96e128e63b09825c1f8b29f
+  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+endif
+
+ifeq ($(PKG_VERSION),6.4.0)
+#  PKG_HASH:=
+  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+endif
+
+ifeq ($(PKG_VERSION),7.2.0)
+  PKG_HASH:=1cf7adf8ff4b5aa49041c8734bbcf1ad18cc4c94d0029aae0f4e48841088479a
+  PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 endif
 
 PATCH_DIR=../patches/$(GCC_VERSION)
 
-BUGURL=https://dev.openwrt.org/
-PKGVERSION=OpenWrt GCC $(PKG_VERSION) $(REVISION)
+BUGURL=http://www.lede-project.org/bugs/
+PKGVERSION=LEDE GCC $(PKG_VERSION) $(REVISION)
 
 HOST_BUILD_PARALLEL:=1
 
@@ -56,16 +72,14 @@ endif
 HOST_STAMP_PREPARED:=$(HOST_BUILD_DIR)/.prepared
 HOST_STAMP_BUILT:=$(GCC_BUILD_DIR)/.built
 HOST_STAMP_CONFIGURED:=$(GCC_BUILD_DIR)/.configured
-HOST_STAMP_INSTALLED:=$(STAGING_DIR_HOST)/stamp/.gcc_$(GCC_VARIANT)_installed
+HOST_STAMP_INSTALLED:=$(HOST_BUILD_PREFIX)/stamp/.gcc_$(GCC_VARIANT)_installed
 
 SEP:=,
-TARGET_LANGUAGES:="c,c++$(if $(CONFIG_INSTALL_LIBGCJ),$(SEP)java)$(if $(CONFIG_INSTALL_GFORTRAN),$(SEP)fortran)$(if $(CONFIG_INSTALL_GCCGO),$(SEP)go)"
+TARGET_LANGUAGES:="c,c++$(if $(CONFIG_INSTALL_GFORTRAN),$(SEP)fortran)$(if $(CONFIG_INSTALL_GCCGO),$(SEP)go)"
 
-TAR_OPTIONS += --exclude='gcc/testsuite/*' --exclude=gcc/ada/*.ad*
-
-ifndef CONFIG_INSTALL_LIBGCJ
-  TAR_OPTIONS += --exclude=libjava
-endif
+TAR_OPTIONS += \
+	--exclude-from='$(CURDIR)/../exclude-testsuite' --exclude=gcc/ada/*.ad* \
+	--exclude=libjava
 
 export libgcc_cv_fixed_point=no
 ifdef CONFIG_USE_UCLIBC
@@ -76,9 +90,9 @@ ifdef CONFIG_INSTALL_GCCGO
 endif
 
 ifdef CONFIG_GCC_USE_GRAPHITE
-  GRAPHITE_CONFIGURE=--with-isl=$(REAL_STAGING_DIR_HOST)
+  GRAPHITE_CONFIGURE:= --with-isl=$(TOPDIR)/staging_dir/host
 else
-  GRAPHITE_CONFIGURE=--without-isl --without-cloog
+  GRAPHITE_CONFIGURE:= --without-isl --without-cloog
 endif
 
 GCC_CONFIGURE:= \
@@ -113,6 +127,10 @@ GCC_CONFIGURE:= \
 		--disable-decimal-float
 ifneq ($(CONFIG_mips)$(CONFIG_mipsel),)
   GCC_CONFIGURE += --with-mips-plt
+endif
+
+ifndef GCC_VERSION_4_8
+  GCC_CONFIGURE += --with-diagnostics-color=auto-if-env
 endif
 
 ifneq ($(CONFIG_SSP_SUPPORT),)
@@ -198,8 +216,8 @@ endef
 
 define Host/Clean
 	rm -rf $(if $(GCC_PREPARE),$(HOST_SOURCE_DIR)) \
-		$(STAGING_DIR_HOST)/stamp/.gcc_* \
-		$(STAGING_DIR_HOST)/stamp/.binutils_* \
+		$(HOST_BUILD_PREFIX)/stamp/.gcc_* \
+		$(HOST_BUILD_PREFIX)/stamp/.binutils_* \
 		$(GCC_BUILD_DIR) \
 		$(BUILD_DIR_TOOLCHAIN)/$(PKG_NAME) \
 		$(TOOLCHAIN_DIR)/$(REAL_GNU_TARGET_NAME) \
