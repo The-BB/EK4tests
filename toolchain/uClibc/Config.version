@@ -5,6 +5,8 @@ config UCLIBC_VERSION
 	default "1.0.22" if UCLIBC_VERSION_1_0_22
 	default "1.0.23" if UCLIBC_VERSION_1_0_23
 	default "1.0.24" if UCLIBC_VERSION_1_0_24
+	default "1.0.25" if UCLIBC_VERSION_1_0_25
+	default "1.0.26" if UCLIBC_VERSION_1_0_26
 
 config UCLIBC_VERSION_1_0_21
 	bool
@@ -16,6 +18,12 @@ config UCLIBC_VERSION_1_0_23
 	bool
 
 config UCLIBC_VERSION_1_0_24
+	bool
+
+config UCLIBC_VERSION_1_0_25
+	bool
+
+config UCLIBC_VERSION_1_0_26
 	bool
 
 config UCLIBC_VERSION_NG
